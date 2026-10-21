@@ -259,19 +259,6 @@ export function IconTodo({ className }: IconProps) {
   )
 }
 
-export function IconDrag({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" className={className ?? 'h-5 w-5'} fill="currentColor" aria-hidden="true">
-      <circle cx="9" cy="6" r="1.6" />
-      <circle cx="15" cy="6" r="1.6" />
-      <circle cx="9" cy="12" r="1.6" />
-      <circle cx="15" cy="12" r="1.6" />
-      <circle cx="9" cy="18" r="1.6" />
-      <circle cx="15" cy="18" r="1.6" />
-    </svg>
-  )
-}
-
 export function IconLogo({ className }: IconProps) {
   return (
     <svg viewBox="0 0 32 32" className={className ?? 'h-8 w-8'} aria-hidden="true">

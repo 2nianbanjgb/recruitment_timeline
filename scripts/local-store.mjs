@@ -1,6 +1,7 @@
 import { createServer } from 'node:http'
 import {
   appendFileSync,
+  copyFileSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -15,6 +16,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const DIST_DIR = join(ROOT, 'dist')
 const DATA_DIR = resolve(process.env.RT_DATA_DIR || join(ROOT, 'data'))
 const STATE_PATH = join(DATA_DIR, 'recruitment-timeline.json')
+const BACKUP_PATH = join(DATA_DIR, 'recruitment-timeline.bak.json')
 const LOG_PATH = join(DATA_DIR, 'changes.log')
 const PORT = Number(process.env.RT_PORT || 5173)
 const HOST = process.env.RT_HOST || '127.0.0.1'
@@ -58,6 +60,14 @@ function writeState(data, changes) {
   const payload = { schemaVersion: 1, revision, savedAt, data }
 
   const tmpPath = `${STATE_PATH}.tmp`
+  if (existsSync(STATE_PATH)) {
+    // 每次写入前保留上一版，误覆盖时还能从 .bak 找回来。
+    try {
+      copyFileSync(STATE_PATH, BACKUP_PATH)
+    } catch {
+      // 备份失败不阻塞写入
+    }
+  }
   writeFileSync(tmpPath, JSON.stringify(payload, null, 2), 'utf8')
   renameSync(tmpPath, STATE_PATH)
 

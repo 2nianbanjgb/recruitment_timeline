@@ -69,7 +69,7 @@ describe('TO DO 视图', () => {
     await user.type(screen.getByLabelText('新增待办'), '第二件{Enter}')
     expect(activeTexts()).toEqual(['第二件', '第一件'])
 
-    const handle = screen.getByRole('button', { name: /拖动「第二件」/ })
+    const handle = screen.getByRole('button', { name: /拖动排序：第二件/ })
     handle.focus()
     await user.keyboard('{ArrowDown}')
 
@@ -78,7 +78,7 @@ describe('TO DO 视图', () => {
 })
 
 function activeTexts(): string[] {
-  return Array.from(document.querySelectorAll('[data-todo-row] p')).map(
+  return Array.from(document.querySelectorAll('[data-todo-row] [data-todo-text]')).map(
     node => node.textContent ?? '',
   )
 }

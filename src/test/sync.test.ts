@@ -146,4 +146,22 @@ describe('快照回写浏览器', () => {
     expect(restored.todos.map(todo => todo.text)).toEqual(['准备项目复盘', '投递拼多多'])
     expect(restored.settings.theme).toBe(settings.theme)
   })
+
+  it('覆盖前会把浏览器里现有数据备份一份', () => {
+    applySnapshotToLocal(snapshot({ events: [makeEvent({ id: 'a', company: '旧公司' })] }))
+    expect(
+      Object.keys(window.localStorage).filter(key => key.startsWith('rt.v1.backup.')),
+    ).toHaveLength(0)
+
+    applySnapshotToLocal(snapshot({ events: [makeEvent({ id: 'b', company: '新公司' })] }))
+    const keys = Object.keys(window.localStorage).filter(key => key.startsWith('rt.v1.backup.'))
+    expect(keys).toHaveLength(1)
+    expect(window.localStorage.getItem(keys[0] ?? '') ?? '').toContain('旧公司')
+    expect(readLocalSnapshot().events[0]?.company).toBe('新公司')
+
+    applySnapshotToLocal(snapshot({ events: [makeEvent({ id: 'c', company: '再公司' })] }))
+    expect(
+      Object.keys(window.localStorage).filter(key => key.startsWith('rt.v1.backup.')),
+    ).toHaveLength(2)
+  })
 })

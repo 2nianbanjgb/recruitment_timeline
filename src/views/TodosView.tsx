@@ -6,7 +6,6 @@ import { EmptyState } from '../components/EmptyState'
 import { useToast } from '../components/Toast'
 import {
   IconCheck,
-  IconDrag,
   IconEdit,
   IconPlus,
   IconTodo,
@@ -111,7 +110,7 @@ export function TodosView() {
       <header>
         <h1 className="text-xl font-semibold tracking-tight text-ink">TO DO</h1>
         <p className="mt-0.5 text-xs text-ink-faint">
-          拖动左侧把手调顺序，勾掉即归档，归档保留 7 天，期间随时可以恢复。
+          按住事项拖动能调整优先级；勾掉即归档，归档保留 7 天，期间随时可以恢复。
         </p>
       </header>
 
@@ -130,12 +129,12 @@ export function TodosView() {
         </button>
       </form>
 
-      <section className="overflow-hidden rounded-2xl border border-line bg-panel">
+      <section className="rounded-2xl border border-line bg-panel">
         <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-2.5">
           <h2 className="text-sm font-semibold text-ink">
             待办{active.length > 0 ? ` · ${active.length}` : ''}
           </h2>
-          <span className="text-[11px] text-ink-faint">拖动排序，新的在上</span>
+          <span className="text-[11px] text-ink-faint">拖动排序，重要的在上</span>
         </div>
         {active.length === 0 ? (
           <div className="p-3">
@@ -156,32 +155,11 @@ export function TodosView() {
                   key={todo.id}
                   data-todo-row
                   className={`flex items-start gap-2 px-3 py-3 [&+li]:border-t [&+li]:border-line ${
-                    dragging ? 'bg-panel-soft select-none' : ''
+                    dragging
+                      ? 'relative z-10 scale-[1.02] rounded-xl bg-panel shadow-lg ring-1 ring-accent/25'
+                      : ''
                   }`}
                 >
-                  <button
-                    type="button"
-                    aria-label={`拖动「${todo.text}」调整顺序（也可用上下方向键）`}
-                    title="拖动排序（聚焦后可用 ↑ ↓）"
-                    onPointerDown={event => startDrag(event, todo)}
-                    onPointerMove={moveDrag}
-                    onPointerUp={endDrag}
-                    onPointerCancel={endDrag}
-                    onKeyDown={event => {
-                      if (event.key === 'ArrowUp' && index > 0) {
-                        event.preventDefault()
-                        moveTodo(todo.id, index - 1)
-                      }
-                      if (event.key === 'ArrowDown' && index < active.length - 1) {
-                        event.preventDefault()
-                        moveTodo(todo.id, index + 1)
-                      }
-                    }}
-                    className="mt-0.5 cursor-grab touch-none rounded-lg p-1 text-ink-faint transition hover:bg-panel-soft hover:text-ink active:cursor-grabbing"
-                  >
-                    <IconDrag className="h-4 w-4" />
-                  </button>
-
                   <button
                     type="button"
                     role="checkbox"
@@ -223,7 +201,32 @@ export function TodosView() {
                       </button>
                     </form>
                   ) : (
-                    <p className="min-w-0 flex-1 break-words text-sm leading-5 text-ink">{todo.text}</p>
+                    <button
+                      type="button"
+                      aria-label={`拖动排序：${todo.text}（聚焦后可用上下方向键）`}
+                      title="按住拖动调整顺序（聚焦后可用 ↑ ↓）"
+                      onPointerDown={event => startDrag(event, todo)}
+                      onPointerMove={moveDrag}
+                      onPointerUp={endDrag}
+                      onPointerCancel={endDrag}
+                      onKeyDown={event => {
+                        if (event.key === 'ArrowUp' && index > 0) {
+                          event.preventDefault()
+                          moveTodo(todo.id, index - 1)
+                        }
+                        if (event.key === 'ArrowDown' && index < active.length - 1) {
+                          event.preventDefault()
+                          moveTodo(todo.id, index + 1)
+                        }
+                      }}
+                      className={`min-w-0 flex-1 cursor-grab touch-none select-none rounded-lg px-1.5 py-0.5 text-left text-sm leading-5 text-ink transition active:cursor-grabbing ${
+                        dragging ? 'bg-panel-soft' : 'hover:bg-panel-soft/60'
+                      }`}
+                    >
+                      <span data-todo-text className="break-words">
+                        {todo.text}
+                      </span>
+                    </button>
                   )}
 
                   {editing ? null : (

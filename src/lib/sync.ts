@@ -37,6 +37,8 @@ export interface RemoteState {
 
 const API_BASE = '/api'
 const SYNCED_AT_KEY = 'rt.v1.syncedAt'
+const BACKUP_PREFIX = 'rt.v1.backup.'
+const MAX_LOCAL_BACKUPS = 3
 
 const EVENT_FIELDS: (keyof RecruitEvent)[] = [
   'company',
@@ -154,7 +156,28 @@ export function readLocalSnapshot(): Snapshot {
   }
 }
 
+/** 覆盖浏览器数据前，先把当前内容存一份，最多保留 3 份。 */
+export function backupLocalSnapshot(now: Date = new Date()): void {
+  try {
+    const current = readLocalSnapshot()
+    if (!hasAnyData(current)) return
+
+    const key = `${BACKUP_PREFIX}${now.toISOString()}-${Math.random().toString(36).slice(2, 6)}`
+    window.localStorage.setItem(key, JSON.stringify({ savedAt: now.toISOString(), ...current }))
+
+    const keys = Object.keys(window.localStorage)
+      .filter(item => item.startsWith(BACKUP_PREFIX))
+      .sort()
+    for (const stale of keys.slice(0, Math.max(0, keys.length - MAX_LOCAL_BACKUPS))) {
+      window.localStorage.removeItem(stale)
+    }
+  } catch {
+    // 备份失败不应阻塞主流程
+  }
+}
+
 export function applySnapshotToLocal(snapshot: Snapshot): void {
+  backupLocalSnapshot()
   saveEvents(snapshot.events.map(event => ({ ...event })))
   saveTodos(snapshot.todos.map(todo => ({ ...todo })))
   saveSettings(normalizeSettings(snapshot.settings))
