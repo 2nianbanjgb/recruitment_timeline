@@ -5,7 +5,9 @@ import { ROUTE_HASH, useHashRoute, type Route } from './hooks/useHashRoute'
 import { useNow } from './hooks/useNow'
 import { useNotifications } from './hooks/useNotifications'
 import { useEvents } from './store/useEvents'
+import { useTodos } from './store/useTodos'
 import { useSettings } from './store/useSettings'
+import { useFileSync } from './hooks/useFileSync'
 import { countdownDisplay, countdownText, nextEvent } from './lib/date'
 import { Layout } from './components/Layout'
 import { EventForm } from './components/EventForm'
@@ -43,8 +45,10 @@ export function App() {
   const now = useNow(30_000)
   const { route, params, navigate } = useHashRoute()
   const { events, addEvent, updateEvent, removeEvent, restoreEvent } = useEvents()
+  const { todos } = useTodos()
   const { settings } = useSettings()
   const { permission, request, sendTest } = useNotifications(events, settings.notifications)
+  const sync = useFileSync(events, todos, settings)
   const { toast } = useToast()
   const [form, setForm] = useState<FormState>({ open: false, initial: null })
 
@@ -178,6 +182,7 @@ export function App() {
             permission={permission}
             onRequestPermission={request}
             onSendTest={sendTest}
+            sync={sync}
           />
         ) : null}
       </Layout>

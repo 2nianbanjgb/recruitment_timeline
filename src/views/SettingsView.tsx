@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent, type ComponentType, type ReactNode } from 'react'
 import { REMIND_OPTIONS, THEMES, THEME_LABELS } from '../types'
 import type { PermissionState } from '../lib/notify'
+import type { FileSyncControls } from '../hooks/useFileSync'
 import { useEvents } from '../store/useEvents'
 import { useSettings } from '../store/useSettings'
 import {
@@ -68,9 +69,15 @@ export interface SettingsViewProps {
   permission: PermissionState
   onRequestPermission: () => Promise<PermissionState>
   onSendTest: () => Promise<boolean>
+  sync: FileSyncControls
 }
 
-export function SettingsView({ permission, onRequestPermission, onSendTest }: SettingsViewProps) {
+export function SettingsView({
+  permission,
+  onRequestPermission,
+  onSendTest,
+  sync,
+}: SettingsViewProps) {
   const { events, replaceEvents, clearAll } = useEvents()
   const { settings, update } = useSettings()
   const { toast } = useToast()
@@ -239,7 +246,72 @@ export function SettingsView({ permission, onRequestPermission, onSendTest }: Se
         </p>
       </Section>
 
-      <Section title="数据" description="数据只保存在这台设备的浏览器里，换设备或清理缓存前记得备份。">
+      <Section
+        title="本地文件同步"
+        description="每次增删改都会写入本地 JSON 快照，并在 changes.log 里追加一条记录。"
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] ${
+              sync.connected
+                ? 'border-success/30 bg-success/10 text-success'
+                : 'border-line bg-panel-soft text-ink-faint'
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${sync.connected ? 'bg-success' : 'bg-ink-faint'}`}
+            />
+            {sync.connected ? '已连接' : '未连接'}
+          </span>
+          {sync.connected && sync.lastSavedAt ? (
+            <span className="text-[11px] text-ink-faint">
+              最后保存{' '}
+              {new Date(sync.lastSavedAt).toLocaleTimeString('zh-CN', { hour12: false })}
+            </span>
+          ) : null}
+        </div>
+
+        {sync.connected ? (
+          <p className="mt-2 break-all rounded-xl bg-panel-soft px-3 py-2 text-[11px] leading-relaxed text-ink-faint">
+            数据文件：{sync.dataDir ?? 'data'}/
+            <br />
+            recruitment-timeline.json（全量快照） · changes.log（追加日志）
+          </p>
+        ) : (
+          <p className="mt-2 rounded-xl bg-panel-soft px-3 py-2 text-[11px] leading-relaxed text-ink-faint">
+            未连接：运行 <code className="rounded bg-panel px-1">npm run app</code>，页面和数据文件会一起在
+            http://127.0.0.1:4600 提供。未连接时改动仍保存在浏览器里，下次连接会自动补写。
+          </p>
+        )}
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={btnSecondary}
+            disabled={!sync.connected}
+            onClick={sync.syncNow}
+          >
+            <IconDownload className="h-4 w-4" />
+            立即写入文件
+          </button>
+          <button
+            type="button"
+            className={btnSecondary}
+            disabled={!sync.connected}
+            onClick={sync.reloadFromFile}
+          >
+            <IconUpload className="h-4 w-4" />
+            用文件覆盖浏览器
+          </button>
+        </div>
+
+        {sync.error ? <p className="mt-2 text-[11px] text-warn">{sync.error}</p> : null}
+      </Section>
+
+      <Section
+        title="数据"
+        description="JSON 备份包含日程与设置（不含待办）；待办和日程都会写进本地文件快照。"
+      >
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" className={btnSecondary} onClick={exportJson}>
             <IconDownload className="h-4 w-4" />

@@ -27,15 +27,18 @@
 
 ```bash
 npm install
-npm run dev        # 开发模式 http://localhost:5173
+npm run app        # 推荐：构建 + 启动，页面和本地文件同步都在 http://127.0.0.1:5173
+npm run dev        # 只改前端代码时用；要文件同步需另开一个终端跑 npm run store
 npm run build      # 生产构建，产物在 dist/
-npm run preview    # 预览生产构建（PWA、通知在这个模式下才完整）
+npm run preview    # 只预览构建产物（没有文件同步）
 ```
 
 环境要求：Node `^20.19` / `>=22.12`（Vite 8 的要求），本项目在 Node 24 上开发。
 
 | 命令 | 说明 |
 | --- | --- |
+| `npm run app` | **日常使用**：构建 + 启动页面（5173），并把数据写进 `data/` |
+| `npm run store` | 只启动本地文件服务（给 `npm run dev` 的 `/api` 代理用） |
 | `npm run dev` | 开发服务器（HMR） |
 | `npm run build` | 类型检查 + 生产构建 |
 | `npm run typecheck` | 只做类型检查 |
@@ -56,13 +59,35 @@ npm run preview    # 预览生产构建（PWA、通知在这个模式下才完�
 
 > 浏览器通知的可靠性边界是「页面或 Service Worker 还活着」。要保证关掉网页也能响，`.ics` + 手机日历才是可靠的那一层。
 
+## 数据持久化：浏览器 + 本地文件
+
+`npm run app` 启动的本地服务**同时托管页面和写入接口**，不需要数据库：
+
+- `data/recruitment-timeline.json`：全量快照，`{ schemaVersion, revision, savedAt, data: { events, todos, settings } }`，原子写入（先写 `.tmp` 再改名）。
+- `data/changes.log`：追加式 JSONL，每次写入一行，记录本次改动涉及哪些记录：
+
+```json
+{"at":"2026-10-21T17:39:35.517Z","revision":2,"changes":[{"entity":"todo","action":"add","id":"f75bd…","label":"投递拼多多"}]}
+```
+
+具体行为：
+
+- 启动时先读 `/api/state`：文件比浏览器里的新，就把文件内容灌回 `localStorage` 再渲染，所以换浏览器、清缓存都不会丢。
+- 每次新增 / 修改 / 删除 / 排序后 400ms 合并一次，写快照并追加一条日志（含 `entity`、`action`、`id`、`label`、变化的字段）。
+- 服务没启动时退回纯浏览器模式，改动照常保存；下次连接后自动补写文件。
+- 设置页有「立即写入文件」和「用文件覆盖浏览器」两个手动按钮。
+- 端口和数据目录可用环境变量覆盖：`RT_PORT`（默认 5173）、`RT_DATA_DIR`（默认 `./data`）。
+- `data/` 默认在 `.gitignore` 里；想用 git 备份数据，删掉那一行即可。
+
+> 注意：`/api` 只在 `npm run app`（或 `npm run store` + dev）时存在；只用静态托管部署时没有文件同步，只有浏览器存储。
+
 ## 数据存在哪
 
-- 全部数据在浏览器 `localStorage`：`rt.v1.events`、`rt.v1.todos`、`rt.v1.settings`、`rt.v1.notified`。
+- 浏览器 `localStorage`：`rt.v1.events`、`rt.v1.todos`、`rt.v1.settings`、`rt.v1.notified`、`rt.v1.syncedAt`（最后一次写入文件的时间）。
+- 本地文件：`data/recruitment-timeline.json` 与 `data/changes.log`（见上一节）。
 - 读取时做结构校验和字段修复；JSON 解析失败会把原文另存到 `rt.v1.<key>.corrupt.<时间戳>`，界面以空列表启动并提示，不会静默丢数据。
 - 无痕模式等写入失败时降级为内存态，并在顶部显示警示条。
-- 多标签页通过 `storage` 事件自动同步。
-- 换设备或清理浏览器缓存前，请先导出 JSON 备份。
+- 多标签页通过 `storage` 事件自动同步；JSON 备份包含日程与设置（不含待办，待办会进本地文件快照）。
 
 ## .ics 导出说明
 
@@ -73,21 +98,23 @@ npm run preview    # 预览生产构建（PWA、通知在这个模式下才完�
 
 ## 部署与安装成 App
 
-- 本地预览：`npm run preview`，打开 `http://localhost:4173`（Service Worker 和通知在 localhost 可用）。
+- 本地日常使用：`npm run app`，打开 `http://127.0.0.1:5173`（页面、Service Worker、通知、本地文件同步都可用）。
+- 只预览构建：`npm run preview` → `http://localhost:4173`（没有文件同步接口）。
 - 手机使用：需要 HTTPS 的静态托管（GitHub Pages、Netlify、Vercel 等），局域网 `http://192.168.x.x` 无法注册 Service Worker。
 - 安装：Chrome / Edge 地址栏右侧「安装」，iOS Safari「添加到主屏幕」。
-- 注意：数据存在各自的浏览器里，手机和电脑不会自动同步，需要靠 JSON 导出 / 导入搬运。
+- 注意：静态托管时数据只在各自浏览器里，手机和电脑不会自动同步；本地 `data/` 文件可以复制或放进网盘。`http://127.0.0.1:5173` 和 `http://localhost:5173` 是两个不同的存储来源，选定一个用。
 
 ## 技术栈与目录
 
 Vite 8 + React 19 + TypeScript 6 + Tailwind CSS 4 + Vitest 5，运行时零 UI 依赖（路由、日期处理、PWA 都是自己写的）。
 
 ```
+scripts/local-store.mjs  本地文件服务：静态托管 + /api/state（JSON 快照 + JSONL 日志）
 src/
   types.ts              数据模型与常量（阶段、状态、提醒选项）
-  lib/                  date（倒计时/月历/分组）、ics、notify、conflict、colors、todos、download
+  lib/                  date（倒计时/月历/分组）、ics、notify、conflict、colors、todos、sync、download
   store/                storage（校验/迁移/损坏兜底）、useEvents、useTodos、useSettings、importExport
-  hooks/                useNow、useHashRoute、useNotifications
+  hooks/                useNow、useHashRoute、useNotifications、useFileSync
   components/           布局、卡片、倒计时、月历、表单、筛选、Toast、确认框
   views/                总览 / 日历 / 全部事件 / TO DO / 设置
   test/                 单元与集成测试
@@ -98,14 +125,14 @@ scripts/gen-icons.mjs   纯 Node 生成 PNG 图标
 ## 测试
 
 ```bash
-npm test   # 82 个用例
+npm test   # 89 个用例
 ```
 
-覆盖倒计时边界（整 72 小时、跨天、全天、进行中）、近 7 天时间窗、待办归档的 7 天边界与恢复、拖动排序与旧数据顺序迁移、月历矩阵（跨年、2 月）、按天分组、`.ics` 的折行 / 转义 / UTC / VALARM、存储损坏兜底与字段修复（含旧版本「HR 面」并入面试）、通知触发与去重、备份合并策略、表单校验，以及把整个 App 挂起来的集成用例。
+覆盖倒计时边界（整 72 小时、跨天、全天、进行中）、近 7 天时间窗、待办归档的 7 天边界与恢复、拖动排序与旧数据顺序迁移、月历矩阵（跨年、2 月）、按天分组、`.ics` 的折行 / 转义 / UTC / VALARM、本地文件同步的变更 diff 与快照回写、存储损坏兜底与字段修复（含旧版本「HR 面」并入面试）、通知触发与去重、备份合并策略、表单校验，以及把整个 App 挂起来的集成用例。
 
 ## 边界与不做的事
 
-- 单用户、单浏览器本地数据；没有账号、云同步和多人协作。
+- 单用户、单机数据；没有账号、云同步和多人协作（本地文件可以自己放网盘 / git）。
 - 时间按设备本地时区理解（预期 Asia/Shanghai），不做多时区换算。
 - 不做周期性事件、Excel / CSV 批量导入、关闭浏览器后的后台推送。
 

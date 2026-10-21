@@ -144,7 +144,7 @@ export function Layout({ route, onNavigate, onAdd, children }: LayoutProps) {
           </button>
           <ThemeToggle />
           <p className="text-[11px] leading-relaxed text-ink-faint">
-            数据只保存在这台设备的浏览器里，建议每周导出一次 JSON 备份。
+            数据保存在本机：浏览器缓存 + 本地文件（用 npm run app 启动时）。不会上传。
           </p>
         </div>
       </aside>

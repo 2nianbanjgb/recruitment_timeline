@@ -10,6 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview",
+    "app": "npm run build && node scripts/local-store.mjs",
+    "store": "node scripts/local-store.mjs",
     "icons": "node scripts/gen-icons.mjs"
   },
   "dependencies": {

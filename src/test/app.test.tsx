@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../App'
 import { ToastProvider } from '../components/Toast'
 import { EventsProvider } from '../store/useEvents'
+import { TodosProvider } from '../store/useTodos'
 import { SettingsProvider } from '../store/useSettings'
 import { EVENTS_KEY } from '../store/storage'
 import { localInput, makeEvent } from './fixtures'
@@ -11,9 +12,11 @@ function renderApp() {
   return render(
     <ToastProvider>
       <EventsProvider>
-        <SettingsProvider>
-          <App />
-        </SettingsProvider>
+        <TodosProvider>
+          <SettingsProvider>
+            <App />
+          </SettingsProvider>
+        </TodosProvider>
       </EventsProvider>
     </ToastProvider>,
   )

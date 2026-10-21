@@ -6,6 +6,9 @@ coverage
 *.tsbuildinfo
 .vite
 
+# 本地数据（JSON 快照 + 操作日志），默认不入库
+data/
+
 # editor
 .vscode/*
 !.vscode/extensions.json
