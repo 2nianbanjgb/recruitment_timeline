@@ -1,0 +1,62 @@
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
+import { EventForm } from '../components/EventForm'
+import type { EventInput } from '../types'
+
+function renderForm(onSubmit: (input: EventInput) => void) {
+  return render(
+    <EventForm
+      open
+      initial={null}
+      defaultDate="2026-10-24"
+      defaultRemindMin={30}
+      onClose={() => {}}
+      onSubmit={onSubmit}
+    />,
+  )
+}
+
+describe('EventForm', () => {
+  it('公司为空时提示并阻止提交', async () => {
+    const onSubmit = vi.fn()
+    const user = userEvent.setup()
+    renderForm(onSubmit)
+
+    await user.click(screen.getByRole('button', { name: '添加' }))
+
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert')).toHaveTextContent('请填写公司名称')
+  })
+
+  it('填写公司后按默认时间提交', async () => {
+    const onSubmit = vi.fn()
+    const user = userEvent.setup()
+    renderForm(onSubmit)
+
+    await user.type(screen.getByPlaceholderText('例如：字节跳动'), '腾讯')
+    await user.click(screen.getByRole('button', { name: '添加' }))
+
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
+      company: '腾讯',
+      stage: 'written',
+      status: 'pending',
+      allDay: false,
+      startAt: '2026-10-24T10:00',
+      remindBeforeMin: 30,
+    })
+  })
+
+  it('切换到全天时只提交日期', async () => {
+    const onSubmit = vi.fn()
+    const user = userEvent.setup()
+    renderForm(onSubmit)
+
+    await user.type(screen.getByPlaceholderText('例如：字节跳动'), '阿里')
+    await user.click(screen.getByRole('checkbox', { name: '全天' }))
+    await user.click(screen.getByRole('button', { name: '添加' }))
+
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ allDay: true, startAt: '2026-10-24' })
+  })
+})

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>秋招日程</title>
+    <meta name="description" content="秋招笔试与面试时间线，倒计时提醒、月历视图、一键导出到手机日历。数据只保存在本机。" />
+    <meta name="theme-color" content="#0b0f19" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      // 首屏前置主题，避免深色模式闪白
+      try {
+        var raw = localStorage.getItem('rt.v1.settings')
+        var theme = raw ? JSON.parse(raw).theme : 'system'
+        var dark =
+          theme === 'dark' ||
+          (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', dark)
+      } catch (e) {
+        /* 读不到就按浅色渲染 */
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
