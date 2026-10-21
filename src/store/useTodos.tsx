@@ -9,7 +9,7 @@ import {
 } from 'react'
 import type { TodoItem } from '../types'
 import { newId } from '../lib/id'
-import { purgeExpiredTodos } from '../lib/todos'
+import { moveTodoInList, nextTopOrder, purgeExpiredTodos } from '../lib/todos'
 import { TODOS_KEY, loadTodos, saveTodos } from './storage'
 
 export interface TodosContextValue {
@@ -18,6 +18,8 @@ export interface TodosContextValue {
   saveIssue: string | null
   addTodo: (text: string) => TodoItem | null
   completeTodo: (id: string) => TodoItem | null
+  updateTodoText: (id: string, text: string) => void
+  moveTodo: (id: string, targetIndex: number) => void
   restoreTodo: (todo: TodoItem) => void
   deleteTodo: (id: string) => TodoItem | null
 }
@@ -66,19 +68,23 @@ export function TodosProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  const addTodo = useCallback((text: string) => {
-    const trimmed = text.trim()
-    if (!trimmed) return null
-    const todo: TodoItem = {
-      id: newId(),
-      text: trimmed.slice(0, 200),
-      done: false,
-      createdAt: new Date().toISOString(),
-      completedAt: null,
-    }
-    setTodos(previous => [todo, ...previous])
-    return todo
-  }, [])
+  const addTodo = useCallback(
+    (text: string) => {
+      const trimmed = text.trim()
+      if (!trimmed) return null
+      const todo: TodoItem = {
+        id: newId(),
+        text: trimmed.slice(0, 200),
+        done: false,
+        createdAt: new Date().toISOString(),
+        completedAt: null,
+        order: nextTopOrder(todos),
+      }
+      setTodos(previous => [todo, ...previous])
+      return todo
+    },
+    [todos],
+  )
 
   const completeTodo = useCallback(
     (id: string) => {
@@ -91,15 +97,37 @@ export function TodosProvider({ children }: { children: ReactNode }) {
     [todos],
   )
 
-  /** 既能撤销「完成」，也能撤销「删除」：不存在就放回去。 */
-  const restoreTodo = useCallback((todo: TodoItem) => {
-    const revived: TodoItem = { ...todo, done: false, completedAt: null }
+  const updateTodoText = useCallback((id: string, text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return
     setTodos(previous =>
-      previous.some(item => item.id === todo.id)
-        ? previous.map(item => (item.id === todo.id ? revived : item))
-        : [revived, ...previous],
+      previous.map(todo =>
+        todo.id === id ? { ...todo, text: trimmed.slice(0, 200) } : todo,
+      ),
     )
   }, [])
+
+  const moveTodo = useCallback((id: string, targetIndex: number) => {
+    setTodos(previous => moveTodoInList(previous, id, targetIndex))
+  }, [])
+
+  /** 既能撤销「完成」，也能撤销「删除」：不存在就放回去。 */
+  const restoreTodo = useCallback(
+    (todo: TodoItem) => {
+      const revived: TodoItem = {
+        ...todo,
+        done: false,
+        completedAt: null,
+        order: nextTopOrder(todos),
+      }
+      setTodos(previous =>
+        previous.some(item => item.id === todo.id)
+          ? previous.map(item => (item.id === todo.id ? revived : item))
+          : [revived, ...previous],
+      )
+    },
+    [todos],
+  )
 
   const deleteTodo = useCallback(
     (id: string) => {
@@ -111,8 +139,28 @@ export function TodosProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo<TodosContextValue>(
-    () => ({ todos, issue, saveIssue, addTodo, completeTodo, restoreTodo, deleteTodo }),
-    [todos, issue, saveIssue, addTodo, completeTodo, restoreTodo, deleteTodo],
+    () => ({
+      todos,
+      issue,
+      saveIssue,
+      addTodo,
+      completeTodo,
+      updateTodoText,
+      moveTodo,
+      restoreTodo,
+      deleteTodo,
+    }),
+    [
+      todos,
+      issue,
+      saveIssue,
+      addTodo,
+      completeTodo,
+      updateTodoText,
+      moveTodo,
+      restoreTodo,
+      deleteTodo,
+    ],
   )
 
   return <TodosContext.Provider value={value}>{children}</TodosContext.Provider>

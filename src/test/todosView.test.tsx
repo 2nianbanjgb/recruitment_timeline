@@ -44,4 +44,41 @@ describe('TO DO 视图', () => {
     await user.click(screen.getByRole('button', { name: '添加' }))
     expect(screen.getByText('没有待办')).toBeInTheDocument()
   })
+
+  it('可以重新编辑待办内容', async () => {
+    const user = userEvent.setup()
+    renderView()
+
+    await user.type(screen.getByLabelText('新增待办'), '写周报{Enter}')
+    await user.click(screen.getByRole('button', { name: '编辑「写周报」' }))
+
+    const input = screen.getByLabelText('编辑待办内容')
+    await user.clear(input)
+    await user.type(input, '写周报并发给 mentor')
+    await user.click(screen.getByRole('button', { name: '保存' }))
+
+    expect(screen.getByText('写周报并发给 mentor')).toBeInTheDocument()
+    expect(screen.queryByText('写周报')).toBeNull()
+  })
+
+  it('方向键可以调整优先级', async () => {
+    const user = userEvent.setup()
+    renderView()
+
+    await user.type(screen.getByLabelText('新增待办'), '第一件{Enter}')
+    await user.type(screen.getByLabelText('新增待办'), '第二件{Enter}')
+    expect(activeTexts()).toEqual(['第二件', '第一件'])
+
+    const handle = screen.getByRole('button', { name: /拖动「第二件」/ })
+    handle.focus()
+    await user.keyboard('{ArrowDown}')
+
+    expect(activeTexts()).toEqual(['第一件', '第二件'])
+  })
 })
+
+function activeTexts(): string[] {
+  return Array.from(document.querySelectorAll('[data-todo-row] p')).map(
+    node => node.textContent ?? '',
+  )
+}

@@ -35,6 +35,8 @@ export interface TodoItem {
   createdAt: string
   /** 只在 done 时存在，用于计算 7 天保留期 */
   completedAt: string | null
+  /** 手动排序权重，小的在前；拖动排序会重排它 */
+  order: number
 }
 
 export interface Settings {

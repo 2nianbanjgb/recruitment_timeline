@@ -1,16 +1,31 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import type { TodoItem } from '../types'
 import { useTodos } from '../store/useTodos'
 import { remainingArchiveDays, splitTodos } from '../lib/todos'
 import { EmptyState } from '../components/EmptyState'
 import { useToast } from '../components/Toast'
-import { IconCheck, IconPlus, IconTodo, IconTrash, IconUndo } from '../components/icons'
-import { btnPrimary, fieldClass } from '../components/ui'
+import {
+  IconCheck,
+  IconDrag,
+  IconEdit,
+  IconPlus,
+  IconTodo,
+  IconTrash,
+  IconUndo,
+} from '../components/icons'
+import { btnPrimary, btnSecondary, fieldClass } from '../components/ui'
 
 export function TodosView() {
-  const { todos, addTodo, completeTodo, restoreTodo, deleteTodo } = useTodos()
+  const { todos, addTodo, completeTodo, updateTodoText, moveTodo, restoreTodo, deleteTodo } =
+    useTodos()
   const { toast } = useToast()
   const [draft, setDraft] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingText, setEditingText] = useState('')
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+  const dragIdRef = useRef<string | null>(null)
+
   const now = Date.now()
   const { active, archived } = splitTodos(todos, now)
 
@@ -40,12 +55,63 @@ export function TodosView() {
     toast(`已恢复「${todo.text}」`)
   }
 
+  const beginEdit = (todo: TodoItem) => {
+    setEditingId(todo.id)
+    setEditingText(todo.text)
+  }
+
+  const commitEdit = () => {
+    if (editingId) updateTodoText(editingId, editingText)
+    setEditingId(null)
+    setEditingText('')
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditingText('')
+  }
+
+  const startDrag = (event: ReactPointerEvent<HTMLButtonElement>, todo: TodoItem) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+    event.currentTarget.setPointerCapture(event.pointerId)
+    dragIdRef.current = todo.id
+    setDraggingId(todo.id)
+  }
+
+  const moveDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const id = dragIdRef.current
+    if (!id) return
+    const rows = listRef.current?.querySelectorAll<HTMLElement>('[data-todo-row]')
+    if (!rows || rows.length === 0) return
+
+    let target = rows.length - 1
+    for (let index = 0; index < rows.length; index += 1) {
+      const row = rows[index]
+      if (!row) continue
+      const rect = row.getBoundingClientRect()
+      if (event.clientY < rect.top + rect.height / 2) {
+        target = index
+        break
+      }
+    }
+    moveTodo(id, target)
+  }
+
+  const endDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (dragIdRef.current === null) return
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    dragIdRef.current = null
+    setDraggingId(null)
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
       <header>
         <h1 className="text-xl font-semibold tracking-tight text-ink">TO DO</h1>
         <p className="mt-0.5 text-xs text-ink-faint">
-          勾掉即归档，归档保留 7 天，期间随时可以恢复。
+          拖动左侧把手调顺序，勾掉即归档，归档保留 7 天，期间随时可以恢复。
         </p>
       </header>
 
@@ -69,7 +135,7 @@ export function TodosView() {
           <h2 className="text-sm font-semibold text-ink">
             待办{active.length > 0 ? ` · ${active.length}` : ''}
           </h2>
-          <span className="text-[11px] text-ink-faint">新的在上</span>
+          <span className="text-[11px] text-ink-faint">拖动排序，新的在上</span>
         </div>
         {active.length === 0 ? (
           <div className="p-3">
@@ -81,33 +147,108 @@ export function TodosView() {
             />
           </div>
         ) : (
-          <ul>
-            {active.map(todo => (
-              <li
-                key={todo.id}
-                className="flex items-start gap-3 px-4 py-3 [&+li]:border-t [&+li]:border-line"
-              >
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={false}
-                  aria-label={`完成「${todo.text}」`}
-                  onClick={() => handleComplete(todo)}
-                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line-strong text-transparent transition hover:border-accent hover:text-accent"
+          <ul ref={listRef}>
+            {active.map((todo, index) => {
+              const editing = editingId === todo.id
+              const dragging = draggingId === todo.id
+              return (
+                <li
+                  key={todo.id}
+                  data-todo-row
+                  className={`flex items-start gap-2 px-3 py-3 [&+li]:border-t [&+li]:border-line ${
+                    dragging ? 'bg-panel-soft select-none' : ''
+                  }`}
                 >
-                  <IconCheck className="h-3.5 w-3.5" />
-                </button>
-                <p className="min-w-0 flex-1 break-words text-sm leading-5 text-ink">{todo.text}</p>
-                <button
-                  type="button"
-                  aria-label={`删除「${todo.text}」`}
-                  onClick={() => handleDelete(todo)}
-                  className="rounded-lg p-1 text-ink-faint transition hover:bg-danger/10 hover:text-danger"
-                >
-                  <IconTrash className="h-4 w-4" />
-                </button>
-              </li>
-            ))}
+                  <button
+                    type="button"
+                    aria-label={`拖动「${todo.text}」调整顺序（也可用上下方向键）`}
+                    title="拖动排序（聚焦后可用 ↑ ↓）"
+                    onPointerDown={event => startDrag(event, todo)}
+                    onPointerMove={moveDrag}
+                    onPointerUp={endDrag}
+                    onPointerCancel={endDrag}
+                    onKeyDown={event => {
+                      if (event.key === 'ArrowUp' && index > 0) {
+                        event.preventDefault()
+                        moveTodo(todo.id, index - 1)
+                      }
+                      if (event.key === 'ArrowDown' && index < active.length - 1) {
+                        event.preventDefault()
+                        moveTodo(todo.id, index + 1)
+                      }
+                    }}
+                    className="mt-0.5 cursor-grab touch-none rounded-lg p-1 text-ink-faint transition hover:bg-panel-soft hover:text-ink active:cursor-grabbing"
+                  >
+                    <IconDrag className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={false}
+                    aria-label={`完成「${todo.text}」`}
+                    onClick={() => handleComplete(todo)}
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line-strong text-transparent transition hover:border-accent hover:text-accent"
+                  >
+                    <IconCheck className="h-3.5 w-3.5" />
+                  </button>
+
+                  {editing ? (
+                    <form
+                      onSubmit={event => {
+                        event.preventDefault()
+                        commitEdit()
+                      }}
+                      className="flex min-w-0 flex-1 flex-wrap items-center gap-2"
+                    >
+                      <input
+                        autoFocus
+                        value={editingText}
+                        onChange={event => setEditingText(event.target.value)}
+                        onKeyDown={event => {
+                          if (event.key === 'Escape') {
+                            event.preventDefault()
+                            cancelEdit()
+                          }
+                        }}
+                        aria-label="编辑待办内容"
+                        className={`${fieldClass} min-w-0 flex-1 py-1.5`}
+                        maxLength={200}
+                      />
+                      <button type="submit" className={`${btnPrimary} px-2.5 py-1.5 text-xs`}>
+                        保存
+                      </button>
+                      <button type="button" onClick={cancelEdit} className={`${btnSecondary} px-2.5 py-1.5 text-xs`}>
+                        取消
+                      </button>
+                    </form>
+                  ) : (
+                    <p className="min-w-0 flex-1 break-words text-sm leading-5 text-ink">{todo.text}</p>
+                  )}
+
+                  {editing ? null : (
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <button
+                        type="button"
+                        aria-label={`编辑「${todo.text}」`}
+                        onClick={() => beginEdit(todo)}
+                        className="rounded-lg p-1 text-ink-faint transition hover:bg-panel-soft hover:text-ink"
+                      >
+                        <IconEdit className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`删除「${todo.text}」`}
+                        onClick={() => handleDelete(todo)}
+                        className="rounded-lg p-1 text-ink-faint transition hover:bg-danger/10 hover:text-danger"
+                      >
+                        <IconTrash className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>

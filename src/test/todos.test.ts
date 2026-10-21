@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { TodoItem } from '../types'
 import {
   TODO_ARCHIVE_TTL_MS,
+  assignMissingOrder,
   isExpiredArchive,
+  moveTodoInList,
   purgeExpiredTodos,
   remainingArchiveDays,
   splitTodos,
@@ -19,6 +21,7 @@ function makeTodo(overrides: Partial<TodoItem> = {}): TodoItem {
     done: false,
     createdAt: new Date(NOW - 3_600_000).toISOString(),
     completedAt: null,
+    order: 0,
     ...overrides,
   }
 }
@@ -72,6 +75,38 @@ describe('待办归档规则', () => {
     expect(remainingArchiveDays(sixDaysAgo, NOW)).toBe(1)
     expect(remainingArchiveDays(justDone, NOW)).toBe(7)
   })
+
+  it('拖动排序会重写全部待办的 order', () => {
+    const a = makeTodo({ id: 'a', order: 0 })
+    const b = makeTodo({ id: 'b', order: 1 })
+    const c = makeTodo({ id: 'c', order: 2 })
+
+    const movedToTop = moveTodoInList([a, b, c], 'c', 0)
+    expect(splitTodos(movedToTop, NOW).active.map(todo => todo.id)).toEqual(['c', 'a', 'b'])
+    expect(movedToTop.find(todo => todo.id === 'c')?.order).toBe(0)
+
+    const movedToBottom = moveTodoInList([a, b, c], 'a', 2)
+    expect(splitTodos(movedToBottom, NOW).active.map(todo => todo.id)).toEqual(['b', 'c', 'a'])
+
+    const unchanged = moveTodoInList([a, b, c], 'a', 0)
+    expect(unchanged.map(todo => todo.order)).toEqual([0, 1, 2])
+  })
+
+  it('旧数据缺 order 时按创建时间补齐，显示顺序不变', () => {
+    const newer = makeTodo({
+      id: 'newer',
+      order: Number.NaN,
+      createdAt: new Date(NOW).toISOString(),
+    })
+    const older = makeTodo({
+      id: 'older',
+      order: Number.NaN,
+      createdAt: new Date(NOW - 1_000).toISOString(),
+    })
+    const migrated = assignMissingOrder([older, newer])
+    expect(splitTodos(migrated, NOW).active.map(todo => todo.id)).toEqual(['newer', 'older'])
+    expect(migrated.every(todo => Number.isFinite(todo.order))).toBe(true)
+  })
 })
 
 describe('待办存储', () => {
@@ -83,6 +118,11 @@ describe('待办存储', () => {
     expect(normalizeTodo({ text: '   ' })).toBeNull()
     expect(normalizeTodo(null)).toBeNull()
     expect(normalizeTodo({ text: '投递简历' })?.done).toBe(false)
+  })
+
+  it('保留已有 order，缺失时标记为待迁移', () => {
+    expect(normalizeTodo({ text: 'a', order: 5 })?.order).toBe(5)
+    expect(Number.isNaN(normalizeTodo({ text: 'b' })?.order ?? 0)).toBe(true)
   })
 
   it('标记完成但缺完成时间时补上', () => {

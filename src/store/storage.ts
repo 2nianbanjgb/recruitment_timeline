@@ -1,7 +1,7 @@
 import type { Mode, RecruitEvent, Settings, Stage, Status, Theme, TodoItem } from '../types'
 import { DEFAULT_SETTINGS, MODES, SCHEMA_VERSION, STAGES, STATUSES, THEMES } from '../types'
 import { parseStartAt } from '../lib/date'
-import { purgeExpiredTodos } from '../lib/todos'
+import { assignMissingOrder, purgeExpiredTodos } from '../lib/todos'
 import { newId } from '../lib/id'
 
 export const EVENTS_KEY = 'rt.v1.events'
@@ -247,6 +247,7 @@ export function normalizeTodo(raw: unknown): TodoItem | null {
     done,
     createdAt,
     completedAt,
+    order: num(source.order, Number.NaN),
   }
 }
 
@@ -285,7 +286,7 @@ export function loadTodos(): LoadTodosResult {
     }
     const invalid = list.length - todos.length
     return {
-      todos: purgeExpiredTodos(todos, Date.now()),
+      todos: purgeExpiredTodos(assignMissingOrder(todos), Date.now()),
       issue:
         invalid > 0 ? `有 ${invalid} 条待办格式不正确，已忽略并保留其余 ${todos.length} 条。` : null,
     }
