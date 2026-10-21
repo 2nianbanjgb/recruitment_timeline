@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { App } from '../App'
 import { ToastProvider } from '../components/Toast'
@@ -57,6 +58,28 @@ describe('App 集成', () => {
     renderApp()
     expect(screen.getByRole('heading', { name: '设置' })).toBeInTheDocument()
     expect(screen.getByText('浏览器通知')).toBeInTheDocument()
+    window.location.hash = ''
+  })
+
+  it('删除日程前会弹窗确认', async () => {
+    const soon = Date.now() + 86_400_000
+    window.localStorage.setItem(
+      EVENTS_KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        events: [makeEvent({ id: 'ev-del', company: '字节跳动', startAt: localInput(soon) })],
+      }),
+    )
+    window.location.hash = '#/events'
+    const user = userEvent.setup()
+    renderApp()
+
+    await user.click(screen.getByRole('button', { name: '删除「字节跳动」' }))
+    expect(screen.getByText('删除这场安排？')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '删除「字节跳动」' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '删除' }))
+    expect(screen.queryByRole('button', { name: '删除「字节跳动」' })).toBeNull()
     window.location.hash = ''
   })
 })

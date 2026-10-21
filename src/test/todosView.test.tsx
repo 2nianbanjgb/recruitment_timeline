@@ -61,6 +61,20 @@ describe('TO DO 视图', () => {
     expect(screen.queryByText('写周报')).toBeNull()
   })
 
+  it('删除待办会先弹窗确认', async () => {
+    const user = userEvent.setup()
+    renderView()
+
+    await user.type(screen.getByLabelText('新增待办'), '要删掉的任务{Enter}')
+    await user.click(screen.getByRole('button', { name: '删除「要删掉的任务」' }))
+
+    expect(screen.getByText('删除这条待办？')).toBeInTheDocument()
+    expect(screen.getByText('要删掉的任务')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '删除' }))
+    expect(screen.queryByText('要删掉的任务')).toBeNull()
+  })
+
   it('方向键可以调整优先级', async () => {
     const user = userEvent.setup()
     renderView()

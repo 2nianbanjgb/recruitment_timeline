@@ -8,9 +8,10 @@ import { useEvents } from './store/useEvents'
 import { useTodos } from './store/useTodos'
 import { useSettings } from './store/useSettings'
 import { useFileSync } from './hooks/useFileSync'
-import { countdownDisplay, countdownText, nextEvent } from './lib/date'
+import { countdownDisplay, countdownText, formatFullRange, nextEvent } from './lib/date'
 import { Layout } from './components/Layout'
 import { EventForm } from './components/EventForm'
+import { ConfirmDialog } from './components/ConfirmDialog'
 import { useToast } from './components/Toast'
 import { DashboardView } from './views/DashboardView'
 import { CalendarView } from './views/CalendarView'
@@ -51,6 +52,7 @@ export function App() {
   const sync = useFileSync(events, todos, settings)
   const { toast } = useToast()
   const [form, setForm] = useState<FormState>({ open: false, initial: null })
+  const [deleteTarget, setDeleteTarget] = useState<RecruitEvent | null>(null)
 
   const focusId = params.get('focus')
 
@@ -87,17 +89,20 @@ export function App() {
     [form.initial, addEvent, updateEvent, toast],
   )
 
-  const handleDelete = useCallback(
-    (event: RecruitEvent) => {
-      const removed = removeEvent(event.id)
-      if (!removed) return
-      toast(`已删除「${removed.company}」`, {
-        label: '撤销',
-        onClick: () => restoreEvent(removed),
-      })
-    },
-    [removeEvent, restoreEvent, toast],
-  )
+  const handleDelete = useCallback((event: RecruitEvent) => {
+    setDeleteTarget(event)
+  }, [])
+
+  const confirmDelete = useCallback(() => {
+    if (!deleteTarget) return
+    const removed = removeEvent(deleteTarget.id)
+    setDeleteTarget(null)
+    if (!removed) return
+    toast(`已删除「${removed.company}」`, {
+      label: '撤销',
+      onClick: () => restoreEvent(removed),
+    })
+  }, [deleteTarget, removeEvent, restoreEvent, toast])
 
   const handleStatus = useCallback(
     (event: RecruitEvent, status: Status) => {
@@ -194,6 +199,20 @@ export function App() {
         defaultRemindMin={settings.defaultRemindMin}
         onClose={closeForm}
         onSubmit={handleSubmit}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="删除这场安排？"
+        description={
+          deleteTarget
+            ? `「${deleteTarget.company} · ${STAGE_LABELS[deleteTarget.stage]}」${formatFullRange(deleteTarget)}。删除后可以从提示条里撤销一次。`
+            : undefined
+        }
+        confirmLabel="删除"
+        tone="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </>
   )

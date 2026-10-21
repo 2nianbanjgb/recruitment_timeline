@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent, type PointerEvent as ReactPointerEven
 import type { TodoItem } from '../types'
 import { useTodos } from '../store/useTodos'
 import { remainingArchiveDays, splitTodos } from '../lib/todos'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { EmptyState } from '../components/EmptyState'
 import { useToast } from '../components/Toast'
 import {
@@ -22,6 +23,7 @@ export function TodosView() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
   const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<TodoItem | null>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const dragIdRef = useRef<string | null>(null)
 
@@ -44,9 +46,15 @@ export function TodosView() {
   }
 
   const handleDelete = (todo: TodoItem) => {
-    const removed = deleteTodo(todo.id)
+    setDeleteTarget(todo)
+  }
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return
+    const removed = deleteTodo(deleteTarget.id)
+    setDeleteTarget(null)
     if (!removed) return
-    toast(`已删除「${todo.text}」`, { label: '撤销', onClick: () => restoreTodo(removed) })
+    toast(`已删除「${removed.text}」`, { label: '撤销', onClick: () => restoreTodo(removed) })
   }
 
   const handleRestore = (todo: TodoItem) => {
@@ -70,6 +78,44 @@ export function TodosView() {
     setEditingText('')
   }
 
+  const dragRows = () =>
+    Array.from(listRef.current?.querySelectorAll<HTMLElement>('[data-todo-row]') ?? [])
+
+  /** 拖动过程中：只和相邻一行比较，越过对方中线多一点才换位，避免抖动。 */
+  const neighborTarget = (pointerY: number, id: string): number | null => {
+    const rows = dragRows()
+    const index = rows.findIndex(row => row.dataset.todoId === id)
+    if (index === -1) return null
+    const rects = rows.map(row => row.getBoundingClientRect())
+    const up = rects[index - 1]
+    const down = rects[index + 1]
+    if (up && pointerY < up.top + up.height * 0.5 - 4) return index - 1
+    if (down && pointerY > down.top + down.height * 0.5 + 4) return index + 1
+    return index
+  }
+
+  /** 松开鼠标时：按指针最终位置算出应插入的槽位。 */
+  const finalTarget = (pointerY: number, id: string): number | null => {
+    const rows = dragRows()
+    const index = rows.findIndex(row => row.dataset.todoId === id)
+    if (index === -1) return null
+    const rects = rows.map(row => row.getBoundingClientRect())
+    const anchor = rects[index]
+    if (!anchor) return null
+
+    // 指针还在自己这一行里就不额外换位，避免轻轻一拖就跳。
+    if (pointerY >= anchor.top && pointerY <= anchor.bottom) return index
+
+    let target = index
+    for (let i = 0; i < rects.length; i += 1) {
+      const rect = rects[i]
+      if (!rect) continue
+      target = i
+      if (pointerY < rect.top + rect.height / 2) break
+    }
+    return target
+  }
+
   const startDrag = (event: ReactPointerEvent<HTMLButtonElement>, todo: TodoItem) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -80,24 +126,17 @@ export function TodosView() {
   const moveDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
     const id = dragIdRef.current
     if (!id) return
-    const rows = listRef.current?.querySelectorAll<HTMLElement>('[data-todo-row]')
-    if (!rows || rows.length === 0) return
-
-    let target = rows.length - 1
-    for (let index = 0; index < rows.length; index += 1) {
-      const row = rows[index]
-      if (!row) continue
-      const rect = row.getBoundingClientRect()
-      if (event.clientY < rect.top + rect.height / 2) {
-        target = index
-        break
-      }
-    }
+    const target = neighborTarget(event.clientY, id)
+    if (target === null) return
     moveTodo(id, target)
   }
 
   const endDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (dragIdRef.current === null) return
+    const id = dragIdRef.current
+    if (!id) return
+    // 松开就算落点，不需要再点一下。
+    const target = finalTarget(event.clientY, id)
+    if (target !== null) moveTodo(id, target)
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
@@ -154,6 +193,7 @@ export function TodosView() {
                 <li
                   key={todo.id}
                   data-todo-row
+                  data-todo-id={todo.id}
                   className={`flex items-start gap-2 px-3 py-3 [&+li]:border-t [&+li]:border-line ${
                     dragging
                       ? 'relative z-10 scale-[1.02] rounded-xl bg-panel shadow-lg ring-1 ring-accent/25'
@@ -306,6 +346,22 @@ export function TodosView() {
           </ul>
         )}
       </section>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={deleteTarget?.done ? '彻底删除这条待办？' : '删除这条待办？'}
+        description={
+          deleteTarget
+            ? deleteTarget.done
+              ? `「${deleteTarget.text}」会从归档里彻底删除，之后无法恢复。`
+              : `「${deleteTarget.text}」删除后不会进入归档；误删可以在提示条里撤销。`
+            : undefined
+        }
+        confirmLabel="删除"
+        tone="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }
