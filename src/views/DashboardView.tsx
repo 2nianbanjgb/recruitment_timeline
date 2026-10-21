@@ -1,7 +1,6 @@
 import type { RecruitEvent } from '../types'
 import { useEvents } from '../store/useEvents'
 import {
-  addDays,
   eventEnd,
   eventStart,
   eventsOnDay,
@@ -11,7 +10,7 @@ import {
   isOverdue,
   nextEvent,
   relativeDayLabel,
-  startOfDay,
+  upcomingWeekRange,
 } from '../lib/date'
 import { EmptyState } from '../components/EmptyState'
 import { EventRow } from '../components/EventCard'
@@ -33,19 +32,18 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
   const nextUp = nextEvent(events, now)
 
   const upcoming = events.filter(event => event.status === 'pending' && eventEnd(event).getTime() > now)
-  const writtenCount = upcoming.filter(event => event.stage === 'written').length
-  const interviewCount = upcoming.filter(
-    event => event.stage === 'interview' || event.stage === 'hr',
+  const writtenCount = upcoming.filter(
+    event => event.stage === 'written' || event.stage === 'assessment',
   ).length
+  const interviewCount = upcoming.filter(event => event.stage === 'interview').length
   const finishedCount = events.filter(event => event.status !== 'pending').length
 
   const todayEvents = eventsOnDay(events, nowDate)
-  const tomorrowStart = addDays(startOfDay(nowDate), 1)
-  const weekStart = tomorrowStart.getTime()
-  const weekEnd = addDays(tomorrowStart, 7).getTime()
+  // 「今天起 7 天」= 今天到下周同一星期（含），共 8 个自然日，看 lib/date.ts 里的实现。
+  const week = upcomingWeekRange(now)
   const weekEvents = events.filter(event => {
     const start = eventStart(event).getTime()
-    return start >= weekStart && start < weekEnd
+    return start >= week.start && start < week.end
   })
   const weekGroups = groupByDay(weekEvents)
   const overdue = events.filter(event => isOverdue(event, now))
@@ -59,10 +57,12 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
             {formatDayWithWeekday(nowDate)} · 今天 {todayEvents.length} 场 · 共 {events.length} 场记录
           </p>
         </div>
-        <button type="button" className={`hidden sm:inline-flex ${btnSecondary}`} onClick={onAdd}>
-          <IconPlus className="h-4 w-4" />
-          新增
-        </button>
+        <span className="hidden sm:inline-flex">
+          <button type="button" className={btnSecondary} onClick={onAdd}>
+            <IconPlus className="h-4 w-4" />
+            新增
+          </button>
+        </span>
       </header>
 
       <NextUpCard
@@ -77,9 +77,9 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
 
       <StatRow
         items={[
-          { label: '待笔试', value: writtenCount, tone: 'accent' },
+          { label: '待测评/笔试', value: writtenCount, tone: 'accent' },
           { label: '待面试', value: interviewCount, tone: 'warn' },
-          { label: '近 7 天', value: weekEvents.length, tone: 'success' },
+          { label: '今天起 7 天', value: weekEvents.length, tone: 'success' },
           { label: '已出结果', value: finishedCount, tone: 'muted' },
         ]}
       />
@@ -110,7 +110,7 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
 
         <section className="rounded-2xl border border-line bg-panel p-4">
           <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-sm font-semibold text-ink">接下来 7 天</h2>
+            <h2 className="text-sm font-semibold text-ink">今天起 7 天</h2>
             <button type="button" onClick={onNavigateAll} className="text-[11px] text-accent hover:underline">
               全部事件
             </button>
@@ -120,7 +120,7 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
               <EmptyState
                 compact
                 icon={<IconSparkle className="h-5 w-5" />}
-                title="未来 7 天还没有安排"
+                title="今天起 7 天还没有安排"
                 description="收到笔试或面试通知后，随手记一场。"
                 action={
                   <button

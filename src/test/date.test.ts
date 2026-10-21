@@ -11,6 +11,7 @@ import {
   nextEvent,
   relativeDayLabel,
   startOfWeek,
+  upcomingWeekRange,
 } from '../lib/date'
 import { BASE_TIME, localDate, localInput, makeEvent } from './fixtures'
 
@@ -137,5 +138,14 @@ describe('过期与下一场', () => {
     expect(relativeDayLabel(now, now)).toBe('今天')
     expect(relativeDayLabel(new Date(BASE_TIME + DAY), now)).toBe('明天')
     expect(relativeDayLabel(new Date(BASE_TIME + 2 * DAY), now)).toBe('后天')
+  })
+
+  it('「今天起 7 天」包含今天与下周同一星期', () => {
+    const { start, end } = upcomingWeekRange(BASE_TIME) // 2026-10-21 周三
+    expect(start).toBe(new Date(2026, 9, 21, 0, 0, 0, 0).getTime())
+    expect(end).toBe(new Date(2026, 9, 29, 0, 0, 0, 0).getTime())
+    expect(end - start).toBe(8 * DAY)
+    expect(new Date(BASE_TIME).getTime() >= start && new Date(BASE_TIME).getTime() < end).toBe(true)
+    expect(new Date(2026, 9, 28, 23, 59).getTime() < end).toBe(true)
   })
 })

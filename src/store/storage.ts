@@ -49,6 +49,12 @@ function clampRemind(value: number): number {
   return rounded
 }
 
+/** 旧版本把「HR 面」单独列为阶段，现在合并进面试。 */
+function normalizeStage(value: unknown): Stage {
+  if (value === 'hr') return 'interview'
+  return pick<Stage>(value, STAGES, 'other')
+}
+
 /** 尽最大努力把一条任意输入修成合法事件；无法识别时返回 null。 */
 export function normalizeEvent(raw: unknown): RecruitEvent | null {
   if (!raw || typeof raw !== 'object') return null
@@ -71,7 +77,7 @@ export function normalizeEvent(raw: unknown): RecruitEvent | null {
     id: str(source.id) || newId(),
     company,
     role: str(source.role),
-    stage: pick<Stage>(source.stage, STAGES, 'other'),
+    stage: normalizeStage(source.stage),
     status: pick<Status>(source.status, STATUSES, 'pending'),
     allDay,
     startAt,

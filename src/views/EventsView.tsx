@@ -93,10 +93,12 @@ export function EventsView({ now, onAdd, onEdit, onDelete, onStatus, focusId }: 
             <IconDownload className="h-4 w-4" />
             导出当前列表
           </button>
-          <button type="button" className={`hidden sm:inline-flex ${btnSecondary}`} onClick={onAdd}>
-            <IconPlus className="h-4 w-4" />
-            新增
-          </button>
+          <span className="hidden sm:inline-flex">
+            <button type="button" className={btnSecondary} onClick={onAdd}>
+              <IconPlus className="h-4 w-4" />
+              新增
+            </button>
+          </span>
         </div>
       </header>
 

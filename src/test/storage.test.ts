@@ -53,6 +53,16 @@ describe('事件归一化', () => {
     const event = normalizeEvent({ company: '腾讯', startAt: '2026-10-24T14:00' })
     expect(event?.id).toBeTruthy()
   })
+
+  it('旧版本的「HR 面」并入面试', () => {
+    const event = normalizeEvent({ company: '腾讯', startAt: '2026-10-24T14:00', stage: 'hr' })
+    expect(event?.stage).toBe('interview')
+  })
+
+  it('新阶段「测评」可正常读写', () => {
+    const event = normalizeEvent({ company: '腾讯', startAt: '2026-10-24T14:00', stage: 'assessment' })
+    expect(event?.stage).toBe('assessment')
+  })
 })
 
 describe('设置归一化', () => {

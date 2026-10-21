@@ -33,14 +33,16 @@ export function CalendarView({ now, onAdd, onEdit, onDelete, onStatus }: Calenda
           <h1 className="text-xl font-semibold tracking-tight text-ink">日历</h1>
           <p className="mt-0.5 text-xs text-ink-faint">点某一天查看当天全部安排，也可以直接给那天新增一场。</p>
         </div>
-        <button
-          type="button"
-          className={`hidden sm:inline-flex ${btnSecondary}`}
-          onClick={() => onAdd(dayKey(selected))}
-        >
-          <IconPlus className="h-4 w-4" />
-          给这天新增
-        </button>
+        <span className="hidden sm:inline-flex">
+          <button
+            type="button"
+            className={btnSecondary}
+            onClick={() => onAdd(dayKey(selected))}
+          >
+            <IconPlus className="h-4 w-4" />
+            给这天新增
+          </button>
+        </span>
       </header>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)]">

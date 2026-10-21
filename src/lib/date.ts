@@ -202,6 +202,15 @@ export function countdownText(display: CountdownDisplay): string {
   return display.parts.map(part => `${part.value} ${part.unit}`).join(' ')
 }
 
+/**
+ * 「今天起 7 天」的时间窗：今天 00:00 起，到下周同一星期当天结束，
+ * 共 8 个自然日（含今天）。
+ */
+export function upcomingWeekRange(now: number): { start: number; end: number } {
+  const start = startOfDay(new Date(now))
+  return { start: start.getTime(), end: addDays(start, 8).getTime() }
+}
+
 export function isOverdue(event: RecruitEvent, now: number): boolean {
   if (event.status !== 'pending') return false
   if (event.allDay) return diffCalendarDays(new Date(now), eventStart(event)) < 0
