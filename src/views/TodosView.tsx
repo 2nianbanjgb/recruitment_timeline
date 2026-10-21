@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import type { TodoItem } from '../types'
 import { useTodos } from '../store/useTodos'
 import { remainingArchiveDays, splitTodos } from '../lib/todos'
@@ -25,7 +25,6 @@ export function TodosView() {
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<TodoItem | null>(null)
   const listRef = useRef<HTMLUListElement>(null)
-  const dragIdRef = useRef<string | null>(null)
 
   const now = Date.now()
   const { active, archived } = splitTodos(todos, now)
@@ -116,32 +115,39 @@ export function TodosView() {
     return target
   }
 
+  // 拖动时在 window 上监听指针：行会被重新插入 DOM，靠元素自身的 pointer capture 会丢事件。
+  useEffect(() => {
+    if (!draggingId) return
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const target = neighborTarget(event.clientY, draggingId)
+      if (target !== null) moveTodo(draggingId, target)
+    }
+
+    const handlePointerUp = (event: PointerEvent) => {
+      const target = finalTarget(event.clientY, draggingId)
+      if (target !== null) moveTodo(draggingId, target)
+      setDraggingId(null)
+    }
+
+    const cancelDrag = () => setDraggingId(null)
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', cancelDrag)
+    window.addEventListener('blur', cancelDrag)
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', cancelDrag)
+      window.removeEventListener('blur', cancelDrag)
+    }
+  }, [draggingId, moveTodo])
+
   const startDrag = (event: ReactPointerEvent<HTMLButtonElement>, todo: TodoItem) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return
-    event.currentTarget.setPointerCapture(event.pointerId)
-    dragIdRef.current = todo.id
+    event.preventDefault()
     setDraggingId(todo.id)
-  }
-
-  const moveDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    const id = dragIdRef.current
-    if (!id) return
-    const target = neighborTarget(event.clientY, id)
-    if (target === null) return
-    moveTodo(id, target)
-  }
-
-  const endDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    const id = dragIdRef.current
-    if (!id) return
-    // 松开就算落点，不需要再点一下。
-    const target = finalTarget(event.clientY, id)
-    if (target !== null) moveTodo(id, target)
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    }
-    dragIdRef.current = null
-    setDraggingId(null)
   }
 
   return (
@@ -246,9 +252,6 @@ export function TodosView() {
                       aria-label={`拖动排序：${todo.text}（聚焦后可用上下方向键）`}
                       title="按住拖动调整顺序（聚焦后可用 ↑ ↓）"
                       onPointerDown={event => startDrag(event, todo)}
-                      onPointerMove={moveDrag}
-                      onPointerUp={endDrag}
-                      onPointerCancel={endDrag}
                       onKeyDown={event => {
                         if (event.key === 'ArrowUp' && index > 0) {
                           event.preventDefault()
