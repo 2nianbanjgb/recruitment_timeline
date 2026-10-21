@@ -1,11 +1,13 @@
-import type { Mode, RecruitEvent, Settings, Stage, Status, Theme } from '../types'
+import type { Mode, RecruitEvent, Settings, Stage, Status, Theme, TodoItem } from '../types'
 import { DEFAULT_SETTINGS, MODES, SCHEMA_VERSION, STAGES, STATUSES, THEMES } from '../types'
 import { parseStartAt } from '../lib/date'
+import { purgeExpiredTodos } from '../lib/todos'
 import { newId } from '../lib/id'
 
 export const EVENTS_KEY = 'rt.v1.events'
 export const SETTINGS_KEY = 'rt.v1.settings'
 export const NOTIFIED_KEY = 'rt.v1.notified'
+export const TODOS_KEY = 'rt.v1.todos'
 
 const NOTIFIED_TTL_MS = 30 * 86_400_000
 const REMIND_RANGE: readonly [number, number] = [0, 7 * 1440]
@@ -224,5 +226,85 @@ export function saveNotified(map: Record<string, number>): void {
     window.localStorage.setItem(NOTIFIED_KEY, JSON.stringify(trimmed))
   } catch {
     // ignore
+  }
+}
+
+/** 待办归一化：空文本直接丢弃，缺字段补默认值。 */
+export function normalizeTodo(raw: unknown): TodoItem | null {
+  if (!raw || typeof raw !== 'object') return null
+  const source = raw as Record<string, unknown>
+
+  const text = str(source.text).trim().slice(0, 200)
+  if (!text) return null
+
+  const createdAt = str(source.createdAt) || new Date().toISOString()
+  const done = bool(source.done, false)
+  const completedAt = done ? str(source.completedAt) || createdAt : null
+
+  return {
+    id: str(source.id) || newId(),
+    text,
+    done,
+    createdAt,
+    completedAt,
+  }
+}
+
+export interface LoadTodosResult {
+  todos: TodoItem[]
+  issue: string | null
+}
+
+export function loadTodos(): LoadTodosResult {
+  if (!storageAvailable()) {
+    return { todos: [], issue: '当前浏览器禁用了本地存储，待办只能保留在本次会话中。' }
+  }
+
+  let raw: string | null = null
+  try {
+    raw = window.localStorage.getItem(TODOS_KEY)
+  } catch {
+    return { todos: [], issue: '读取本地待办失败，已按空列表启动。' }
+  }
+  if (!raw) return { todos: [], issue: null }
+
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    const list = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === 'object' && Array.isArray((parsed as { todos?: unknown }).todos)
+        ? (parsed as { todos: unknown[] }).todos
+        : null
+
+    if (!list) throw new Error('unexpected shape')
+
+    const todos: TodoItem[] = []
+    for (const item of list) {
+      const todo = normalizeTodo(item)
+      if (todo) todos.push(todo)
+    }
+    const invalid = list.length - todos.length
+    return {
+      todos: purgeExpiredTodos(todos, Date.now()),
+      issue:
+        invalid > 0 ? `有 ${invalid} 条待办格式不正确，已忽略并保留其余 ${todos.length} 条。` : null,
+    }
+  } catch {
+    try {
+      window.localStorage.setItem(`${TODOS_KEY}.corrupt.${Date.now()}`, raw)
+    } catch {
+      // 备份失败也不能阻塞启动
+    }
+    return { todos: [], issue: '本地待办无法解析，原始内容已备份，界面按空列表启动。' }
+  }
+}
+
+export function saveTodos(todos: readonly TodoItem[]): boolean {
+  if (!storageAvailable()) return false
+  try {
+    window.localStorage.setItem(TODOS_KEY, JSON.stringify({ schemaVersion: SCHEMA_VERSION, todos }))
+    return true
+  } catch {
+    return false
   }
 }

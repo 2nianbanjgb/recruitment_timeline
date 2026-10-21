@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-export type Route = 'dashboard' | 'calendar' | 'events' | 'settings'
+export type Route = 'dashboard' | 'calendar' | 'events' | 'todos' | 'settings'
 
 export interface RouteState {
   route: Route
@@ -11,6 +11,7 @@ export const ROUTE_HASH: Record<Route, string> = {
   dashboard: '#/',
   calendar: '#/calendar',
   events: '#/events',
+  todos: '#/todos',
   settings: '#/settings',
 }
 
@@ -18,7 +19,9 @@ function parseHash(hash: string): RouteState {
   const raw = hash.replace(/^#\/?/, '')
   const [path = '', query = ''] = raw.split('?')
   const route: Route =
-    path === 'calendar' || path === 'events' || path === 'settings' ? path : 'dashboard'
+    path === 'calendar' || path === 'events' || path === 'todos' || path === 'settings'
+      ? path
+      : 'dashboard'
   return { route, params: new URLSearchParams(query) }
 }
 

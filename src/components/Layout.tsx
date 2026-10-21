@@ -15,6 +15,7 @@ import {
   IconPlus,
   IconSettings,
   IconSun,
+  IconTodo,
 } from './icons'
 import { btnPrimary } from './ui'
 
@@ -28,6 +29,7 @@ const NAV: NavItem[] = [
   { route: 'dashboard', label: '总览', Icon: IconDashboard },
   { route: 'calendar', label: '日历', Icon: IconCalendar },
   { route: 'events', label: '全部事件', Icon: IconList },
+  { route: 'todos', label: 'TO DO', Icon: IconTodo },
   { route: 'settings', label: '设置', Icon: IconSettings },
 ]
 
@@ -151,10 +153,12 @@ export function Layout({ route, onNavigate, onAdd, children }: LayoutProps) {
         <Brand />
         <div className="flex items-center gap-1.5">
           <ThemeToggle compact />
-          <button type="button" className={btnPrimary} onClick={onAdd}>
-            <IconPlus className="h-4 w-4" />
-            新增
-          </button>
+          {route === 'todos' ? null : (
+            <button type="button" className={btnPrimary} onClick={onAdd}>
+              <IconPlus className="h-4 w-4" />
+              新增
+            </button>
+          )}
         </div>
       </header>
 
@@ -172,7 +176,7 @@ export function Layout({ route, onNavigate, onAdd, children }: LayoutProps) {
         aria-label="底部导航"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-panel/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           {NAV.map(({ route: itemRoute, label, Icon }) => {
             const active = route === itemRoute
             return (

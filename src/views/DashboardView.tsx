@@ -79,7 +79,7 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
         items={[
           { label: '待测评/笔试', value: writtenCount, tone: 'accent' },
           { label: '待面试', value: interviewCount, tone: 'warn' },
-          { label: '今天起 7 天', value: weekEvents.length, tone: 'success' },
+          { label: '近 7 天', value: weekEvents.length, tone: 'success' },
           { label: '已出结果', value: finishedCount, tone: 'muted' },
         ]}
       />
@@ -110,7 +110,7 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
 
         <section className="rounded-2xl border border-line bg-panel p-4">
           <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-sm font-semibold text-ink">今天起 7 天</h2>
+            <h2 className="text-sm font-semibold text-ink">近 7 天</h2>
             <button type="button" onClick={onNavigateAll} className="text-[11px] text-accent hover:underline">
               全部事件
             </button>
@@ -120,7 +120,7 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
               <EmptyState
                 compact
                 icon={<IconSparkle className="h-5 w-5" />}
-                title="今天起 7 天还没有安排"
+                title="近 7 天还没有安排"
                 description="收到笔试或面试通知后，随手记一场。"
                 action={
                   <button

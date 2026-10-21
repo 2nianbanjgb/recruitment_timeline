@@ -13,6 +13,7 @@ import { useToast } from './components/Toast'
 import { DashboardView } from './views/DashboardView'
 import { CalendarView } from './views/CalendarView'
 import { EventsView } from './views/EventsView'
+import { TodosView } from './views/TodosView'
 import { SettingsView } from './views/SettingsView'
 
 interface FormState {
@@ -169,6 +170,8 @@ export function App() {
             focusId={focusId}
           />
         ) : null}
+
+        {route === 'todos' ? <TodosView /> : null}
 
         {route === 'settings' ? (
           <SettingsView

@@ -4,6 +4,7 @@ import './index.css'
 import { App } from './App'
 import { ToastProvider } from './components/Toast'
 import { EventsProvider } from './store/useEvents'
+import { TodosProvider } from './store/useTodos'
 import { SettingsProvider } from './store/useSettings'
 
 const container = document.getElementById('root')
@@ -13,9 +14,11 @@ createRoot(container).render(
   <StrictMode>
     <ToastProvider>
       <EventsProvider>
-        <SettingsProvider>
-          <App />
-        </SettingsProvider>
+        <TodosProvider>
+          <SettingsProvider>
+            <App />
+          </SettingsProvider>
+        </TodosProvider>
       </EventsProvider>
     </ToastProvider>
   </StrictMode>,

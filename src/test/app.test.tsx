@@ -45,7 +45,7 @@ describe('App 集成', () => {
     expect(screen.getByText('下一场')).toBeInTheDocument()
     expect(screen.getAllByText('字节跳动').length).toBeGreaterThan(0)
     expect(screen.getByText('待测评/笔试')).toBeInTheDocument()
-    expect(screen.getAllByText('今天起 7 天').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('近 7 天').length).toBeGreaterThan(0)
     expect(screen.getByText('今天没有安排')).toBeInTheDocument()
   })
 

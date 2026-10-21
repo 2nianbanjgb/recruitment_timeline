@@ -248,6 +248,17 @@ export function IconUndo({ className }: IconProps) {
   )
 }
 
+export function IconTodo({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="m3.5 6.5 1.5 1.5L7.5 5.5" />
+      <path d="m3.5 13 1.5 1.5 2.5-2.5" />
+      <path d="m3.5 19.5 1.5 1.5 2.5-2.5" />
+      <path d="M11.5 6.5h9M11.5 13h9M11.5 19.5h9" />
+    </Svg>
+  )
+}
+
 export function IconLogo({ className }: IconProps) {
   return (
     <svg viewBox="0 0 32 32" className={className ?? 'h-8 w-8'} aria-hidden="true">
