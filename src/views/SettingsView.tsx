@@ -280,7 +280,7 @@ export function SettingsView({
         ) : (
           <p className="mt-2 rounded-xl bg-panel-soft px-3 py-2 text-[11px] leading-relaxed text-ink-faint">
             未连接：运行 <code className="rounded bg-panel px-1">npm run app</code>，页面和数据文件会一起在
-            http://127.0.0.1:4600 提供。未连接时改动仍保存在浏览器里，下次连接会自动补写。
+            http://127.0.0.1:5173 提供。未连接时改动仍保存在浏览器里，下次连接会自动补写。
           </p>
         )}
 

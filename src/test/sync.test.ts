@@ -48,8 +48,18 @@ function snapshot(overrides: Partial<Snapshot> = {}): Snapshot {
 }
 
 describe('文件同步的变更记录', () => {
-  it('首次同步不产生记录', () => {
-    expect(diffState(null, snapshot({ events: [makeEvent()] }))).toEqual([])
+  it('文件还是空的时候，首次写入把现有数据记为新增', () => {
+    const changes = diffState(
+      null,
+      snapshot({ events: [makeEvent()], todos: [makeTodo()] }),
+    )
+    expect(changes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ entity: 'event', action: 'add', id: 'e1' }),
+        expect.objectContaining({ entity: 'todo', action: 'add', id: 't1' }),
+      ]),
+    )
+    expect(changes.some(change => change.entity === 'settings')).toBe(false)
   })
 
   it('识别日程的新增、修改、删除，并记录字段', () => {

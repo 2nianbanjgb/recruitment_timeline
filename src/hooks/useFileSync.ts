@@ -4,6 +4,7 @@ import {
   applySnapshotToLocal,
   diffState,
   fetchRemoteState,
+  hasAnyData,
   pushSnapshot,
   writeSyncedAt,
   type Snapshot,
@@ -41,7 +42,11 @@ export function useFileSync(
     if (!connectedRef.current) return
     const next = currentRef.current
     const changes = diffState(lastRef.current, next)
-    if (!force && lastRef.current !== null && changes.length === 0) return
+    const firstSync = lastRef.current === null
+
+    // 文件还是空的、本地也没有内容时，不写一份空快照占位。
+    if (!force && firstSync && !hasAnyData(next)) return
+    if (!force && !firstSync && changes.length === 0) return
 
     const result = await pushSnapshot(next, changes)
     if (!result) {
@@ -82,7 +87,10 @@ export function useFileSync(
         lastSavedAt: remote.savedAt,
         error: null,
       })
-      if (!remote.data) void push(true)
+      if (!remote.data) {
+        // 文件为空但浏览器里已有数据：把现有内容带进文件，完成迁移。
+        if (hasAnyData(currentRef.current)) void push(true)
+      }
     })()
     return () => {
       cancelled = true

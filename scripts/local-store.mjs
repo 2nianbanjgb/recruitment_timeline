@@ -51,6 +51,7 @@ function readState() {
 }
 
 function writeState(data, changes) {
+  mkdirSync(DATA_DIR, { recursive: true })
   const previous = readState()
   const revision = previous.revision + 1
   const savedAt = new Date().toISOString()

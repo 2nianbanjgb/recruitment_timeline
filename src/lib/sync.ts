@@ -69,13 +69,14 @@ function changedFields<T>(before: T, after: T, fields: readonly (keyof T)[]): st
 
 /**
  * 对比上一次写入文件的内容，算出这次改动涉及的记录。
+ * previous 为 null（文件还是空的）时，把现有数据整体记为新增。
  * 只在本地给日志用，不参与业务逻辑。
  */
 export function diffState(previous: Snapshot | null, next: Snapshot): SyncChange[] {
-  if (!previous) return []
+  const before: Snapshot = previous ?? { events: [], todos: [], settings: next.settings }
   const changes: SyncChange[] = []
 
-  const previousEvents = new Map(previous.events.map(event => [event.id, event]))
+  const previousEvents = new Map(before.events.map(event => [event.id, event]))
   const nextEvents = new Map(next.events.map(event => [event.id, event]))
 
   for (const [id, event] of nextEvents) {
@@ -95,7 +96,7 @@ export function diffState(previous: Snapshot | null, next: Snapshot): SyncChange
     }
   }
 
-  const previousTodos = new Map(previous.todos.map(todo => [todo.id, todo]))
+  const previousTodos = new Map(before.todos.map(todo => [todo.id, todo]))
   const nextTodos = new Map(next.todos.map(todo => [todo.id, todo]))
 
   for (const [id, todo] of nextTodos) {
@@ -115,7 +116,7 @@ export function diffState(previous: Snapshot | null, next: Snapshot): SyncChange
     }
   }
 
-  const settingsFields = changedFields(previous.settings, next.settings, SETTINGS_FIELDS)
+  const settingsFields = changedFields(before.settings, next.settings, SETTINGS_FIELDS)
   if (settingsFields.length > 0) {
     changes.push({
       entity: 'settings',
