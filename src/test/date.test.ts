@@ -117,10 +117,11 @@ describe('月历矩阵', () => {
 })
 
 describe('过期与下一场', () => {
-  it('未结束且已结束才算过期', () => {
+  it('过期只针对还在进行中的场次', () => {
     const ended = makeEvent({ startAt: localInput(BASE_TIME - 3 * HOUR) })
     expect(isOverdue(ended, BASE_TIME)).toBe(true)
     expect(isOverdue({ ...ended, status: 'finished' }, BASE_TIME)).toBe(false)
+    expect(isOverdue({ ...ended, status: 'completed' }, BASE_TIME)).toBe(false)
     expect(isOverdue({ ...ended, status: 'in_progress' }, BASE_TIME)).toBe(true)
     expect(isOverdue(makeEvent({ startAt: localInput(BASE_TIME + HOUR) }), BASE_TIME)).toBe(false)
   })
@@ -133,9 +134,14 @@ describe('过期与下一场', () => {
       startAt: localInput(BASE_TIME + HOUR),
       status: 'finished',
     })
+    const completed = makeEvent({
+      id: 'completed',
+      startAt: localInput(BASE_TIME + 2 * HOUR),
+      status: 'completed',
+    })
     const ended = makeEvent({ id: 'ended', startAt: localInput(BASE_TIME - 5 * HOUR) })
-    expect(nextEvent([later, finished, sooner, ended], BASE_TIME)?.id).toBe('sooner')
-    expect(nextEvent([finished, ended], BASE_TIME)).toBeNull()
+    expect(nextEvent([later, finished, completed, sooner, ended], BASE_TIME)?.id).toBe('sooner')
+    expect(nextEvent([finished, completed, ended], BASE_TIME)).toBeNull()
   })
 
   it('相对日期标签', () => {

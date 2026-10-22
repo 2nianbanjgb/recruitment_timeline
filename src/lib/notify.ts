@@ -1,5 +1,5 @@
 import type { RecruitEvent } from '../types'
-import { STAGE_LABELS } from '../types'
+import { STAGE_LABELS, isTerminalStatus } from '../types'
 import { MINUTE, dayKey, eventStart, formatTime, parseStartAt } from './date'
 
 /** 只补发 1 小时内的提醒，避免打开页面时被过期提醒刷屏。 */
@@ -81,7 +81,7 @@ export function dueNotifications(
   const due: DueNotification[] = []
 
   for (const event of events) {
-    if (event.status === 'finished') continue
+    if (isTerminalStatus(event.status)) continue
     for (const kind of ['remind', 'start'] as const) {
       const triggerAt = notificationTrigger(event, kind)
       if (triggerAt === null) continue

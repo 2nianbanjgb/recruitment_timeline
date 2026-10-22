@@ -1,5 +1,5 @@
 import { useRef, useState, type ChangeEvent, type ComponentType, type ReactNode } from 'react'
-import { REMIND_OPTIONS, THEMES, THEME_LABELS } from '../types'
+import { REMIND_OPTIONS, THEMES, THEME_LABELS, isTerminalStatus } from '../types'
 import type { PermissionState } from '../lib/notify'
 import type { FileSyncControls } from '../hooks/useFileSync'
 import { useEvents } from '../store/useEvents'
@@ -125,7 +125,9 @@ export function SettingsView({
 
   const exportIcs = () => {
     const list =
-      icsScope === 'active' ? events.filter(event => event.status !== 'finished') : [...events]
+      icsScope === 'active'
+        ? events.filter(event => !isTerminalStatus(event.status))
+        : [...events]
     if (list.length === 0) {
       toast('没有可导出的事件')
       return

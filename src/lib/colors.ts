@@ -74,5 +74,6 @@ export interface StatusStyle {
 export const STATUS_STYLES: Record<Status, StatusStyle> = {
   pending: { dot: 'bg-warn', pill: 'border-warn/25 bg-warn/10 text-warn', label: '待进行' },
   in_progress: { dot: 'bg-info', pill: 'border-info/25 bg-info/10 text-info', label: '流程中' },
+  completed: { dot: 'bg-success', pill: 'border-success/25 bg-success/10 text-success', label: '已完成' },
   finished: { dot: 'bg-muted', pill: 'border-line-strong bg-muted/10 text-muted', label: '已结束' },
 }

@@ -1,4 +1,5 @@
 import type { RecruitEvent } from '../types'
+import { isTerminalStatus } from '../types'
 
 export const MINUTE = 60_000
 export const HOUR = 3_600_000
@@ -212,7 +213,7 @@ export function upcomingWeekRange(now: number): { start: number; end: number } {
 }
 
 export function isOverdue(event: RecruitEvent, now: number): boolean {
-  if (event.status === 'finished') return false
+  if (isTerminalStatus(event.status)) return false
   if (event.allDay) return diffCalendarDays(new Date(now), eventStart(event)) < 0
   return now >= eventEnd(event).getTime()
 }
@@ -227,7 +228,7 @@ export function sortByStart(events: readonly RecruitEvent[]): RecruitEvent[] {
 
 export function nextEvent(events: readonly RecruitEvent[], now: number): RecruitEvent | null {
   const candidates = events.filter(
-    event => event.status !== 'finished' && eventEnd(event).getTime() > now,
+    event => !isTerminalStatus(event.status) && eventEnd(event).getTime() > now,
   )
   return sortByStart(candidates)[0] ?? null
 }

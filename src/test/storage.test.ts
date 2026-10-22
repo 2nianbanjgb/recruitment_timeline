@@ -71,6 +71,7 @@ describe('事件归一化', () => {
     expect(normalizeEvent({ ...base, status: 'failed' })?.status).toBe('finished')
     expect(normalizeEvent({ ...base, status: 'withdrawn' })?.status).toBe('finished')
     expect(normalizeEvent({ ...base, status: 'in_progress' })?.status).toBe('in_progress')
+    expect(normalizeEvent({ ...base, status: 'completed' })?.status).toBe('completed')
   })
 
   it('新阶段「测评」可正常读写', () => {

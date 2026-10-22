@@ -1,4 +1,5 @@
 import type { RecruitEvent } from '../types'
+import { isTerminalStatus } from '../types'
 import { useEvents } from '../store/useEvents'
 import {
   eventEnd,
@@ -32,10 +33,11 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
   const nextUp = nextEvent(events, now)
 
   const upcoming = events.filter(
-    event => event.status !== 'finished' && eventEnd(event).getTime() > now,
+    event => !isTerminalStatus(event.status) && eventEnd(event).getTime() > now,
   )
   const pendingCount = upcoming.filter(event => event.status === 'pending').length
   const inProgressCount = upcoming.filter(event => event.status === 'in_progress').length
+  const completedCount = events.filter(event => event.status === 'completed').length
   const finishedCount = events.filter(event => event.status === 'finished').length
 
   const todayEvents = eventsOnDay(events, nowDate)
@@ -77,9 +79,10 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
 
       <StatRow
         items={[
-          { label: '待进行', value: pendingCount, tone: 'accent' },
+          { label: '待进行', value: pendingCount, tone: 'warn' },
           { label: '流程中', value: inProgressCount, tone: 'info' },
-          { label: '近 7 天', value: weekEvents.length, tone: 'success' },
+          { label: '已完成', value: completedCount, tone: 'success' },
+          { label: '近 7 天', value: weekEvents.length, tone: 'accent' },
           { label: '已结束', value: finishedCount, tone: 'muted' },
         ]}
       />

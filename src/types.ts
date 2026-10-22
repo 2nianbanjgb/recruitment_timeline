@@ -1,5 +1,5 @@
 export type Stage = 'apply' | 'assessment' | 'written' | 'interview' | 'offer' | 'other'
-export type Status = 'pending' | 'in_progress' | 'finished'
+export type Status = 'pending' | 'in_progress' | 'completed' | 'finished'
 export type Mode = 'online' | 'onsite'
 export type Theme = 'system' | 'light' | 'dark'
 
@@ -60,9 +60,16 @@ export interface BackupFile {
 export const SCHEMA_VERSION = 1
 
 export const STAGES: readonly Stage[] = ['apply', 'assessment', 'written', 'interview', 'offer', 'other']
-export const STATUSES: readonly Status[] = ['pending', 'in_progress', 'finished']
+export const STATUSES: readonly Status[] = ['pending', 'in_progress', 'completed', 'finished']
 export const MODES: readonly Mode[] = ['online', 'onsite']
 export const THEMES: readonly Theme[] = ['system', 'light', 'dark']
+
+/** 流程已经走完的状态：不再参与倒计时、提醒、冲突检测和「已过期」提示。 */
+export const TERMINAL_STATUSES: readonly Status[] = ['completed', 'finished']
+
+export function isTerminalStatus(status: Status): boolean {
+  return TERMINAL_STATUSES.includes(status)
+}
 
 export const STAGE_LABELS: Record<Stage, string> = {
   apply: '网申',
@@ -76,6 +83,7 @@ export const STAGE_LABELS: Record<Stage, string> = {
 export const STATUS_LABELS: Record<Status, string> = {
   pending: '待进行',
   in_progress: '流程中',
+  completed: '已完成',
   finished: '已结束',
 }
 

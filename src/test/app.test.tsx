@@ -53,6 +53,7 @@ describe('App 集成', () => {
     expect(screen.getAllByText('字节跳动').length).toBeGreaterThan(0)
     expect(screen.getAllByText('待进行').length).toBeGreaterThan(0)
     expect(screen.getAllByText('流程中').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('已完成').length).toBeGreaterThan(0)
     expect(screen.getAllByText('近 7 天').length).toBeGreaterThan(0)
     expect(screen.getByText('今天没有安排')).toBeInTheDocument()
   })

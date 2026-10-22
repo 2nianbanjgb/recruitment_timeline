@@ -15,8 +15,9 @@ const TONE_TEXT = {
 } as const
 
 export function StatRow({ items }: { items: StatItem[] }) {
+  const columns = items.length >= 5 ? 'sm:grid-cols-5' : 'sm:grid-cols-4'
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className={`grid grid-cols-2 gap-3 ${columns}`}>
       {items.map(item => (
         <div key={item.label} className={`${cardClass} px-4 py-3`}>
           <p className="text-xs text-ink-muted">{item.label}</p>
