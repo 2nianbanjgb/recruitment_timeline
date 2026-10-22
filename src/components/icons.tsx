@@ -204,6 +204,16 @@ export function IconVideo({ className }: IconProps) {
   )
 }
 
+export function IconBuilding({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M4 21V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v15" />
+      <path d="M15 10h3a2 2 0 0 1 2 2v9M3 21h18" />
+      <path d="M8 8h3M8 12h3M8 16h3" />
+    </Svg>
+  )
+}
+
 export function IconAlert({ className }: IconProps) {
   return (
     <Svg className={className}>

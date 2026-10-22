@@ -303,7 +303,7 @@ export function EventForm({
                   type="text"
                   value={passcode}
                   onChange={event => setPasscode(event.target.value)}
-                  placeholder="例如：8848"
+                  placeholder="例如：0862"
                   className={`${fieldClass} max-w-[16rem] font-mono`}
                   autoComplete="off"
                   autoCapitalize="off"

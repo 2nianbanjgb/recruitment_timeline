@@ -67,13 +67,13 @@ describe('EventForm', () => {
 
     await user.type(screen.getByPlaceholderText('例如：字节跳动'), '字节跳动')
     await user.type(screen.getByPlaceholderText('https://...'), 'https://meeting.example.com/abc')
-    await user.type(screen.getByPlaceholderText('例如：8848'), '8848')
+    await user.type(screen.getByPlaceholderText('例如：0862'), '0862')
     await user.click(screen.getByRole('button', { name: '添加' }))
 
     expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
       mode: 'online',
       link: 'https://meeting.example.com/abc',
-      passcode: '8848',
+      passcode: '0862',
     })
   })
 

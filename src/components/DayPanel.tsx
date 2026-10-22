@@ -14,12 +14,23 @@ export interface DayPanelProps {
   onEdit: (event: RecruitEvent) => void
   onDelete: (event: RecruitEvent) => void
   onStatus: (event: RecruitEvent, status: Status) => void
+  className?: string
 }
 
-export function DayPanel({ day, now, events, conflicts, onAdd, onEdit, onDelete, onStatus }: DayPanelProps) {
+export function DayPanel({
+  day,
+  now,
+  events,
+  conflicts,
+  onAdd,
+  onEdit,
+  onDelete,
+  onStatus,
+  className,
+}: DayPanelProps) {
   return (
-    <section className="rounded-2xl border border-line bg-panel p-4">
-      <div className="flex items-start justify-between gap-2">
+    <section className={`flex flex-col rounded-2xl border border-line bg-panel p-4 ${className ?? ''}`}>
+      <div className="flex shrink-0 items-start justify-between gap-2">
         <div>
           <h2 className="text-sm font-semibold text-ink">{formatDayWithWeekday(day)}</h2>
           <p className="mt-0.5 text-[11px] text-ink-faint">
@@ -32,7 +43,8 @@ export function DayPanel({ day, now, events, conflicts, onAdd, onEdit, onDelete,
         </button>
       </div>
 
-      <div className="mt-3 flex flex-col gap-2">
+      {/* 桌面端这一天安排多时只滚这块，标题和页面都保持不动 */}
+      <div className="mt-3 flex min-h-0 flex-1 flex-col gap-2 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
         {events.length === 0 ? (
           <EmptyState
             compact

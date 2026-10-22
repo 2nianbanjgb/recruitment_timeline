@@ -1,11 +1,20 @@
 import type { RecruitEvent } from '../types'
 import { MODE_LABELS, STAGE_LABELS } from '../types'
-import { companyColor } from '../lib/colors'
 import { formatFullRange } from '../lib/date'
+import { useCompanyColor } from '../store/useCompanyColors'
 import { btnPrimary, btnSecondary } from './ui'
 import { Countdown } from './Countdown'
 import { CopyButton } from './CopyButton'
-import { IconClock, IconEdit, IconExternal, IconKey, IconMapPin, IconPlus, IconVideo } from './icons'
+import {
+  IconBuilding,
+  IconClock,
+  IconEdit,
+  IconExternal,
+  IconKey,
+  IconMapPin,
+  IconPlus,
+  IconVideo,
+} from './icons'
 
 export interface NextUpCardProps {
   event: RecruitEvent | null
@@ -26,6 +35,9 @@ export function NextUpCard({
   overdueCount,
   totalCount,
 }: NextUpCardProps) {
+  const colorOf = useCompanyColor()
+  const companyTint = event ? colorOf(event.company) : null
+
   return (
     <section className="relative overflow-hidden rounded-3xl border border-line bg-panel p-6 shadow-[var(--shadow-soft)] sm:p-8">
       <div
@@ -52,8 +64,8 @@ export function NextUpCard({
             <span
               className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-lg font-semibold"
               style={{
-                background: companyColor(event.company).soft,
-                color: companyColor(event.company).accent,
+                background: companyTint?.soft,
+                color: companyTint?.accent,
               }}
               aria-hidden="true"
             >
@@ -72,17 +84,30 @@ export function NextUpCard({
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-muted">
-            <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
               <IconClock className="h-4 w-4" />
               {formatFullRange(event)}
             </span>
-            <span className="inline-flex items-center gap-1.5">
-              {event.mode === 'online' ? <IconVideo className="h-4 w-4" /> : <IconMapPin className="h-4 w-4" />}
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+              {event.mode === 'online' ? <IconVideo className="h-4 w-4" /> : <IconBuilding className="h-4 w-4" />}
               {MODE_LABELS[event.mode]}
             </span>
 
+            {event.link ? (
+              <a
+                href={event.link}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 whitespace-nowrap text-accent hover:underline"
+              >
+                {event.mode === 'online' ? '会议链接' : '通知链接'}
+                <IconExternal className="h-3.5 w-3.5" />
+              </a>
+            ) : null}
+
             {event.mode === 'onsite' && event.location ? (
               <span className="inline-flex min-w-0 items-center gap-1.5">
+                <IconMapPin className="h-4 w-4 shrink-0" />
                 <span className="max-w-[20rem] truncate" title={event.location}>
                   {event.location}
                 </span>
@@ -95,7 +120,7 @@ export function NextUpCard({
             ) : null}
 
             {event.mode === 'online' && event.passcode ? (
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <IconKey className="h-4 w-4" />
                 作答口令
                 <span className="rounded bg-panel-soft px-1.5 py-0.5 font-mono text-sm text-ink">
@@ -107,18 +132,6 @@ export function NextUpCard({
                   successMessage="已复制作答口令"
                 />
               </span>
-            ) : null}
-
-            {event.link ? (
-              <a
-                href={event.link}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-accent hover:underline"
-              >
-                {event.mode === 'online' ? '会议链接' : '通知链接'}
-                <IconExternal className="h-3.5 w-3.5" />
-              </a>
             ) : null}
           </div>
 

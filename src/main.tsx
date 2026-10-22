@@ -6,6 +6,7 @@ import { ToastProvider } from './components/Toast'
 import { EventsProvider } from './store/useEvents'
 import { TodosProvider } from './store/useTodos'
 import { SettingsProvider } from './store/useSettings'
+import { CompanyColorsProvider } from './store/useCompanyColors'
 import { hydrateFromServer } from './lib/sync'
 
 const container = document.getElementById('root')
@@ -19,11 +20,13 @@ async function boot() {
     <StrictMode>
       <ToastProvider>
         <EventsProvider>
-          <TodosProvider>
-            <SettingsProvider>
-              <App />
-            </SettingsProvider>
-          </TodosProvider>
+          <CompanyColorsProvider>
+            <TodosProvider>
+              <SettingsProvider>
+                <App />
+              </SettingsProvider>
+            </TodosProvider>
+          </CompanyColorsProvider>
         </EventsProvider>
       </ToastProvider>
     </StrictMode>,

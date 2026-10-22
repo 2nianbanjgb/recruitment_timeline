@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
 import { ToastProvider } from '../components/Toast'
 import { EventsProvider } from '../store/useEvents'
+import { CompanyColorsProvider } from '../store/useCompanyColors'
 import { TodosProvider } from '../store/useTodos'
 import { SettingsProvider } from '../store/useSettings'
 import { EVENTS_KEY } from '../store/storage'
@@ -13,11 +14,13 @@ function renderApp() {
   return render(
     <ToastProvider>
       <EventsProvider>
-        <TodosProvider>
-          <SettingsProvider>
-            <App />
-          </SettingsProvider>
-        </TodosProvider>
+        <CompanyColorsProvider>
+          <TodosProvider>
+            <SettingsProvider>
+              <App />
+            </SettingsProvider>
+          </TodosProvider>
+        </CompanyColorsProvider>
       </EventsProvider>
     </ToastProvider>,
   )

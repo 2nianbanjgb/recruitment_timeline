@@ -1,6 +1,7 @@
 import type { RecruitEvent, Status } from '../types'
 import { MODE_LABELS, STAGE_LABELS, STATUSES, STATUS_LABELS } from '../types'
-import { STATUS_STYLES, companyColor } from '../lib/colors'
+import { STATUS_STYLES } from '../lib/colors'
+import { useCompanyColor } from '../store/useCompanyColors'
 import {
   countdownDisplay,
   countdownText,
@@ -14,6 +15,7 @@ import { CopyButton } from './CopyButton'
 import { Menu } from './Menu'
 import {
   IconAlert,
+  IconBuilding,
   IconChevronDown,
   IconEdit,
   IconExternal,
@@ -42,7 +44,8 @@ export function EventCard({
   onDelete,
   onStatus,
 }: EventCardProps) {
-  const color = companyColor(event.company)
+  const colorOf = useCompanyColor()
+  const color = colorOf(event.company)
   const style = STATUS_STYLES[event.status]
   const overdue = isOverdue(event, now)
   const display = countdownDisplay(event, now)
@@ -106,33 +109,36 @@ export function EventCard({
             {event.role ? ` · ${event.role}` : ''}
           </p>
 
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-faint">
-            <span className="inline-flex items-center gap-1">
-              {event.mode === 'online' ? (
-                <IconVideo className="h-3.5 w-3.5" />
-              ) : (
-                <IconMapPin className="h-3.5 w-3.5" />
-              )}
-              {MODE_LABELS[event.mode]}
-            </span>
-
-            {event.mode === 'onsite' && event.location ? (
-              <span className="inline-flex min-w-0 items-center gap-1">
-                <span className="max-w-[15rem] truncate" title={event.location}>
-                  {event.location}
-                </span>
-                <CopyButton
-                  value={event.location}
-                  label={`复制地址「${event.location}」`}
-                  successMessage="已复制地址"
-                />
+          <div className="mt-1.5 flex flex-col gap-1 text-[11px] text-ink-faint">
+            {/* 第一行：形式 + 链接，链接始终和「线上 / 线下」在同一行 */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                {event.mode === 'online' ? (
+                  <IconVideo className="h-3.5 w-3.5" />
+                ) : (
+                  <IconBuilding className="h-3.5 w-3.5" />
+                )}
+                {MODE_LABELS[event.mode]}
               </span>
-            ) : null}
 
+              {event.link ? (
+                <a
+                  href={event.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 whitespace-nowrap text-accent hover:underline"
+                >
+                  {event.mode === 'online' ? '会议链接' : '通知链接'}
+                  <IconExternal className="h-3 w-3" />
+                </a>
+              ) : null}
+            </div>
+
+            {/* 第二行：口令或地址，单独占一行，不会被长地址挤成竖排 */}
             {event.mode === 'online' && event.passcode ? (
-              <span className="inline-flex items-center gap-1">
-                <IconKey className="h-3.5 w-3.5" />
-                口令
+              <div className="flex items-center gap-1 whitespace-nowrap">
+                <IconKey className="h-3.5 w-3.5 shrink-0" />
+                <span>作答口令</span>
                 <span className="rounded bg-panel-soft px-1.5 py-0.5 font-mono text-ink">
                   {event.passcode}
                 </span>
@@ -141,19 +147,21 @@ export function EventCard({
                   label={`复制口令「${event.passcode}」`}
                   successMessage="已复制作答口令"
                 />
-              </span>
+              </div>
             ) : null}
 
-            {event.link ? (
-              <a
-                href={event.link}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-accent hover:underline"
-              >
-                {event.mode === 'online' ? '会议链接' : '通知链接'}
-                <IconExternal className="h-3 w-3" />
-              </a>
+            {event.mode === 'onsite' && event.location ? (
+              <div className="flex min-w-0 items-center gap-1">
+                <IconMapPin className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate" title={event.location}>
+                  {event.location}
+                </span>
+                <CopyButton
+                  value={event.location}
+                  label={`复制地址「${event.location}」`}
+                  successMessage="已复制地址"
+                />
+              </div>
             ) : null}
           </div>
         </div>
@@ -204,7 +212,8 @@ export interface EventRowProps {
 
 /** 时间线里的一行：时间 + 公司 + 阶段 + 相对时间。 */
 export function EventRow({ event, now, onClick }: EventRowProps) {
-  const color = companyColor(event.company)
+  const colorOf = useCompanyColor()
+  const color = colorOf(event.company)
   const style = STATUS_STYLES[event.status]
   const display = countdownDisplay(event, now)
 

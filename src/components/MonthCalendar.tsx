@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { RecruitEvent } from '../types'
-import { companyColor } from '../lib/colors'
+import { useCompanyColor } from '../store/useCompanyColors'
 import { dayKey, eventStart, formatMonthTitle, monthMatrix } from '../lib/date'
 import { btnIcon, btnSecondary } from './ui'
 import { IconChevronLeft, IconChevronRight } from './icons'
@@ -29,6 +29,7 @@ export function MonthCalendar({
   onToday,
 }: MonthCalendarProps) {
   const weeks = monthMatrix(year, month)
+  const colorOf = useCompanyColor()
   const byDay = new Map<string, RecruitEvent[]>()
   for (const event of events) {
     const key = dayKey(eventStart(event))
@@ -100,7 +101,7 @@ export function MonthCalendar({
                 {/* 桌面端：公司小条，整条用公司色着色（浅底 + 同色描边与文字） */}
                 <span className="hidden flex-col gap-0.5 sm:flex">
                   {dayEvents.slice(0, 3).map(event => {
-                    const color = companyColor(event.company)
+                    const color = colorOf(event.company)
                     return (
                       <span
                         key={event.id}
@@ -128,7 +129,7 @@ export function MonthCalendar({
                     <span
                       key={event.id}
                       className="h-1.5 w-1.5 rounded-full"
-                      style={{ background: companyColor(event.company).accent }}
+                      style={{ background: colorOf(event.company).accent }}
                     />
                   ))}
                 </span>
