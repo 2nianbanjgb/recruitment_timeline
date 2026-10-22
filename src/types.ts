@@ -18,7 +18,7 @@ export interface RecruitEvent {
   mode: Mode
   /** 线上会议链接（线下时是通知原文链接） */
   link: string
-  /** 线上会议的作答口令 / 入会密码，没有则空字符串 */
+  /** 线上会议的口令 / 入会密码，没有则空字符串 */
   passcode: string
   location: string
   note: string

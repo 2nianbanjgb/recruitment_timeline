@@ -15,7 +15,7 @@ export interface CopyButtonProps {
 const BASE =
   'inline-flex shrink-0 items-center justify-center rounded-md border border-line bg-panel px-1.5 py-1 text-ink-faint transition hover:border-accent/40 hover:bg-accent-soft hover:text-accent'
 
-/** 一键复制：地址、作答口令这类要贴到别处的信息。 */
+/** 一键复制：地址、口令这类要贴到别处的信息。 */
 export function CopyButton({ value, label, successMessage = '已复制', className }: CopyButtonProps) {
   const { toast } = useToast()
 

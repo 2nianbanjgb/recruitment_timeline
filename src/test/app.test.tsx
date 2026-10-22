@@ -124,7 +124,7 @@ describe('App 集成', () => {
 
     await user.click(screen.getByRole('button', { name: '复制口令「8848」' }))
     expect(writeText).toHaveBeenCalledWith('8848')
-    expect(await screen.findByText('已复制作答口令')).toBeInTheDocument()
+    expect(await screen.findByText('已复制口令')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '复制地址「北京望京 · 美团总部」' }))
     expect(writeText).toHaveBeenCalledWith('北京望京 · 美团总部')

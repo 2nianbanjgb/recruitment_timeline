@@ -75,7 +75,7 @@ function describe(event: RecruitEvent): string[] {
   if (event.role.trim()) lines.push(`岗位：${event.role.trim()}`)
   lines.push(`形式：${MODE_LABELS[event.mode]}`)
   if (event.mode === 'online' && event.link.trim()) lines.push(`链接：${event.link.trim()}`)
-  if (event.mode === 'online' && event.passcode.trim()) lines.push(`作答口令：${event.passcode.trim()}`)
+  if (event.mode === 'online' && event.passcode.trim()) lines.push(`口令：${event.passcode.trim()}`)
   if (event.mode === 'onsite' && event.location.trim()) lines.push(`地址：${event.location.trim()}`)
   if (event.mode === 'onsite' && event.link.trim()) lines.push(`通知链接：${event.link.trim()}`)
   if (event.note.trim()) lines.push(`备注：${event.note.trim()}`)

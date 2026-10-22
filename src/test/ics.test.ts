@@ -147,7 +147,7 @@ describe('日历生成', () => {
     expect(unfold(ics)).toContain('SUMMARY:【腾讯】面试')
   })
 
-  it('线上会议带着作答口令，线下带着地址与通知链接', () => {
+  it('线上会议带着口令，线下带着地址与通知链接', () => {
     const online = makeEvent({
       id: 'online',
       link: 'https://meeting.example.com/abc',
@@ -163,7 +163,7 @@ describe('日历生成', () => {
     const ics = unfold(generateIcs([online, onsite], new Date(2026, 9, 21, 9, 0, 0)))
 
     expect(ics).toContain('链接：https://meeting.example.com/abc')
-    expect(ics).toContain('作答口令：8848')
+    expect(ics).toContain('口令：8848')
     expect(ics).toContain('地址：北京望京 · 美团总部')
     expect(ics).toContain('通知链接：https://notice.example.com/1')
   })

@@ -54,7 +54,7 @@ describe('事件归一化', () => {
     expect(event?.id).toBeTruthy()
   })
 
-  it('旧数据没有作答口令时补空字符串，已有的会保留', () => {
+  it('旧数据没有口令时补空字符串，已有的会保留', () => {
     const base = { company: '腾讯', startAt: '2026-10-24T14:00' }
     expect(normalizeEvent(base)?.passcode).toBe('')
     expect(normalizeEvent({ ...base, passcode: '8848' })?.passcode).toBe('8848')

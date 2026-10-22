@@ -122,14 +122,14 @@ export function NextUpCard({
             {event.mode === 'online' && event.passcode ? (
               <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                 <IconKey className="h-4 w-4" />
-                作答口令
+                口令
                 <span className="rounded bg-panel-soft px-1.5 py-0.5 font-mono text-sm text-ink">
                   {event.passcode}
                 </span>
                 <CopyButton
                   value={event.passcode}
                   label={`复制口令「${event.passcode}」`}
-                  successMessage="已复制作答口令"
+                  successMessage="已复制口令"
                 />
               </span>
             ) : null}

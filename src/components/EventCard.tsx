@@ -138,14 +138,14 @@ export function EventCard({
             {event.mode === 'online' && event.passcode ? (
               <div className="flex items-center gap-1 whitespace-nowrap">
                 <IconKey className="h-3.5 w-3.5 shrink-0" />
-                <span>作答口令</span>
+                <span>口令</span>
                 <span className="rounded bg-panel-soft px-1.5 py-0.5 font-mono text-ink">
                   {event.passcode}
                 </span>
                 <CopyButton
                   value={event.passcode}
                   label={`复制口令「${event.passcode}」`}
-                  successMessage="已复制作答口令"
+                  successMessage="已复制口令"
                 />
               </div>
             ) : null}

@@ -60,7 +60,7 @@ describe('EventForm', () => {
     expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ allDay: true, startAt: '2026-10-24' })
   })
 
-  it('线上会议可以填会议链接和作答口令', async () => {
+  it('线上会议可以填会议链接和口令', async () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     renderForm(onSubmit)

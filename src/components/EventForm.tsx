@@ -294,7 +294,7 @@ export function EventForm({
               </label>
               <label className="flex flex-col gap-1.5">
                 <span className={labelClass}>
-                  作答口令
+                  口令
                   <span className="ml-1.5 text-[11px] font-normal text-ink-faint">
                     会议密码 / 入会口令，没有可以留空
                   </span>
