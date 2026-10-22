@@ -1,8 +1,8 @@
 import type { TodoItem } from '../types'
 
-/** 完成后进入归档，保留 7 天后自动删除。 */
-export const TODO_ARCHIVE_TTL_MS = 7 * 86_400_000
-export const TODO_ARCHIVE_TTL_DAYS = 7
+/** 完成后进入归档，保留 30 天后自动删除，期间可随时恢复。 */
+export const TODO_ARCHIVE_TTL_DAYS = 30
+export const TODO_ARCHIVE_TTL_MS = TODO_ARCHIVE_TTL_DAYS * 86_400_000
 
 export function completedAtMs(todo: TodoItem): number | null {
   if (!todo.completedAt) return null
@@ -10,7 +10,7 @@ export function completedAtMs(todo: TodoItem): number | null {
   return Number.isFinite(ms) ? ms : null
 }
 
-/** 归档超过 7 天，等待清理。 */
+/** 归档超过 30 天，等待清理。 */
 export function isExpiredArchive(todo: TodoItem, now: number): boolean {
   if (!todo.done) return false
   const completedAt = completedAtMs(todo)

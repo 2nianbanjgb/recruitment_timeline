@@ -27,13 +27,13 @@ export interface RecruitEvent {
 /** 表单提交的数据，id 与时间戳由数据层生成。 */
 export type EventInput = Omit<RecruitEvent, 'id' | 'createdAt' | 'updatedAt'>
 
-/** 一条待办：勾掉后进入归档，7 天内可恢复，之后自动删除。 */
+/** 一条待办：勾掉后进入归档，30 天内可恢复，之后自动删除。 */
 export interface TodoItem {
   id: string
   text: string
   done: boolean
   createdAt: string
-  /** 只在 done 时存在，用于计算 7 天保留期 */
+  /** 只在 done 时存在，用于计算 30 天保留期 */
   completedAt: string | null
   /** 手动排序权重，小的在前；拖动排序会重排它 */
   order: number

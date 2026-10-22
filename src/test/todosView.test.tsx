@@ -75,6 +75,35 @@ describe('TO DO 视图', () => {
     expect(screen.queryByText('要删掉的任务')).toBeNull()
   })
 
+  it('一键清空归档会先确认，清空后还能撤销', async () => {
+    const user = userEvent.setup()
+    renderView()
+
+    await user.type(screen.getByLabelText('新增待办'), '任务一{Enter}')
+    await user.type(screen.getByLabelText('新增待办'), '任务二{Enter}')
+    await user.click(screen.getByRole('checkbox', { name: '完成「任务一」' }))
+    await user.click(screen.getByRole('checkbox', { name: '完成「任务二」' }))
+    expect(screen.getByText('已归档 · 2')).toBeInTheDocument()
+
+    // 先关掉两条「已完成」提示，后面只剩清空的那条提示可以撤销。
+    for (const button of screen.queryAllByRole('button', { name: '关闭提示' })) {
+      await user.click(button)
+    }
+
+    await user.click(screen.getByRole('button', { name: '清空归档' }))
+    expect(screen.getByText('清空归档？')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '取消' }))
+    expect(screen.getByText('已归档 · 2')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '清空归档' }))
+    await user.click(screen.getByRole('button', { name: '清空' }))
+    expect(screen.queryByText('已归档 · 2')).toBeNull()
+    expect(screen.getByText('已清空归档，共 2 条')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '撤销' }))
+    expect(screen.getByText('已归档 · 2')).toBeInTheDocument()
+  })
+
   it('方向键可以调整优先级', async () => {
     const user = userEvent.setup()
     renderView()

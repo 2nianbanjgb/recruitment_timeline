@@ -138,6 +138,17 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* 公司色小条：色相由行内 --chip-h 提供，文字色随主题加深/提亮以保证对比度。 */
+  .company-chip {
+    background: hsl(var(--chip-h) 78% 60% / 0.14);
+    color: hsl(var(--chip-h) 62% 33%);
+  }
+
+  .dark .company-chip {
+    background: hsl(var(--chip-h) 80% 62% / 0.2);
+    color: hsl(var(--chip-h) 88% 78%);
+  }
+
   .animate-fade-up {
     animation: rt-fade-up 320ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   }

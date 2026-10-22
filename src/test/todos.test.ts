@@ -27,13 +27,13 @@ function makeTodo(overrides: Partial<TodoItem> = {}): TodoItem {
 }
 
 describe('待办归档规则', () => {
-  it('完成后 7 天内保留，超过 7 天才删除', () => {
-    const fresh = makeTodo({ done: true, completedAt: new Date(NOW - 6 * DAY).toISOString() })
-    const boundary = makeTodo({ id: 'b', done: true, completedAt: new Date(NOW - 7 * DAY).toISOString() })
+  it('完成后 30 天内保留，超过 30 天才删除', () => {
+    const fresh = makeTodo({ done: true, completedAt: new Date(NOW - 29 * DAY).toISOString() })
+    const boundary = makeTodo({ id: 'b', done: true, completedAt: new Date(NOW - 30 * DAY).toISOString() })
     const stale = makeTodo({
       id: 'c',
       done: true,
-      completedAt: new Date(NOW - 7 * DAY - 1).toISOString(),
+      completedAt: new Date(NOW - 30 * DAY - 1).toISOString(),
     })
 
     expect(isExpiredArchive(fresh, NOW)).toBe(false)
@@ -70,10 +70,10 @@ describe('待办归档规则', () => {
   })
 
   it('剩余可恢复天数按天向上取整', () => {
-    const sixDaysAgo = makeTodo({ done: true, completedAt: new Date(NOW - 6 * DAY).toISOString() })
+    const nearlyAMonth = makeTodo({ done: true, completedAt: new Date(NOW - 29 * DAY).toISOString() })
     const justDone = makeTodo({ done: true, completedAt: new Date(NOW).toISOString() })
-    expect(remainingArchiveDays(sixDaysAgo, NOW)).toBe(1)
-    expect(remainingArchiveDays(justDone, NOW)).toBe(7)
+    expect(remainingArchiveDays(nearlyAMonth, NOW)).toBe(1)
+    expect(remainingArchiveDays(justDone, NOW)).toBe(30)
   })
 
   it('拖动排序会重写全部待办的 order', () => {
@@ -142,7 +142,7 @@ describe('待办存储', () => {
     expect(loaded.todos[0]?.text).toBe('准备项目复盘')
   })
 
-  it('读取时自动清理超过 7 天的归档', () => {
+  it('读取时自动清理超过 30 天的归档', () => {
     const stale = makeTodo({
       id: 'stale',
       done: true,

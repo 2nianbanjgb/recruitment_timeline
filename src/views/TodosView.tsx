@@ -16,14 +16,24 @@ import {
 import { btnPrimary, btnSecondary, fieldClass } from '../components/ui'
 
 export function TodosView() {
-  const { todos, addTodo, completeTodo, updateTodoText, moveTodo, restoreTodo, deleteTodo } =
-    useTodos()
+  const {
+    todos,
+    addTodo,
+    completeTodo,
+    updateTodoText,
+    moveTodo,
+    restoreTodo,
+    deleteTodo,
+    clearArchived,
+    restoreArchived,
+  } = useTodos()
   const { toast } = useToast()
   const [draft, setDraft] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<TodoItem | null>(null)
+  const [confirmClear, setConfirmClear] = useState(false)
   const listRef = useRef<HTMLUListElement>(null)
 
   const now = Date.now()
@@ -38,7 +48,7 @@ export function TodosView() {
   const handleComplete = (todo: TodoItem) => {
     const completed = completeTodo(todo.id)
     if (!completed) return
-    toast(`已完成「${todo.text}」，7 天内可在归档里恢复`, {
+    toast(`已完成「${todo.text}」，30 天内可在归档里恢复`, {
       label: '撤销',
       onClick: () => restoreTodo(completed),
     })
@@ -59,6 +69,16 @@ export function TodosView() {
   const handleRestore = (todo: TodoItem) => {
     restoreTodo(todo)
     toast(`已恢复「${todo.text}」`)
+  }
+
+  const confirmClearArchive = () => {
+    setConfirmClear(false)
+    const removed = clearArchived()
+    if (removed.length === 0) return
+    toast(`已清空归档，共 ${removed.length} 条`, {
+      label: '撤销',
+      onClick: () => restoreArchived(removed),
+    })
   }
 
   const beginEdit = (todo: TodoItem) => {
@@ -155,7 +175,7 @@ export function TodosView() {
       <header>
         <h1 className="text-xl font-semibold tracking-tight text-ink">TO DO</h1>
         <p className="mt-0.5 text-xs text-ink-faint">
-          按住事项拖动能调整优先级；勾掉即归档，归档保留 7 天，期间随时可以恢复。
+          按住事项拖动能调整优先级；勾掉即归档，归档保留 30 天，期间随时可以恢复。
         </p>
       </header>
 
@@ -304,11 +324,24 @@ export function TodosView() {
           <h2 className="text-sm font-semibold text-ink">
             已归档{archived.length > 0 ? ` · ${archived.length}` : ''}
           </h2>
-          <span className="text-[11px] text-ink-faint">完成后 7 天自动删除</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-ink-faint">完成后 30 天自动删除</span>
+            {archived.length > 0 ? (
+              <button
+                type="button"
+                aria-label="清空归档"
+                onClick={() => setConfirmClear(true)}
+                className="inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] text-ink-faint transition hover:bg-danger/10 hover:text-danger"
+              >
+                <IconTrash className="h-3.5 w-3.5" />
+                清空
+              </button>
+            ) : null}
+          </div>
         </div>
         {archived.length === 0 ? (
           <p className="px-4 py-4 text-xs text-ink-faint">
-            勾掉的待办会出现在这里，7 天内都可以恢复。
+            勾掉的待办会出现在这里，30 天内都可以恢复。
           </p>
         ) : (
           <ul>
@@ -364,6 +397,16 @@ export function TodosView() {
         tone="danger"
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={confirmClear}
+        title="清空归档？"
+        description={`归档里的 ${archived.length} 条已完成待办会被彻底删除，之后无法恢复。`}
+        confirmLabel="清空"
+        tone="danger"
+        onConfirm={confirmClearArchive}
+        onCancel={() => setConfirmClear(false)}
       />
     </div>
   )

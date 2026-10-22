@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import type { RecruitEvent } from '../types'
 import { companyColor } from '../lib/colors'
 import { dayKey, eventStart, formatMonthTitle, monthMatrix } from '../lib/date'
@@ -96,18 +97,26 @@ export function MonthCalendar({
                   {isToday ? <span className="text-[10px] text-accent">今天</span> : null}
                 </span>
 
-                {/* 桌面端：公司小条，顶部边框用公司色区分 */}
+                {/* 桌面端：公司小条，整条用公司色着色（浅底 + 同色描边与文字） */}
                 <span className="hidden flex-col gap-0.5 sm:flex">
-                  {dayEvents.slice(0, 3).map(event => (
-                    <span
-                      key={event.id}
-                      className="truncate rounded border-t-2 bg-panel-soft px-1.5 py-[3px] text-[11px] leading-tight text-ink-muted"
-                      style={{ borderTopColor: companyColor(event.company).accent }}
-                      title={event.company}
-                    >
-                      {event.company}
-                    </span>
-                  ))}
+                  {dayEvents.slice(0, 3).map(event => {
+                    const color = companyColor(event.company)
+                    return (
+                      <span
+                        key={event.id}
+                        className="company-chip truncate rounded border px-1.5 py-[3px] text-[11px] leading-tight"
+                        style={
+                          {
+                            '--chip-h': color.hue,
+                            borderColor: color.border,
+                          } as CSSProperties
+                        }
+                        title={event.company}
+                      >
+                        {event.company}
+                      </span>
+                    )
+                  })}
                   {dayEvents.length > 3 ? (
                     <span className="px-1 text-[10px] text-ink-faint">+{dayEvents.length - 3}</span>
                   ) : null}

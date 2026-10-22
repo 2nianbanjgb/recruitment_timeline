@@ -22,6 +22,10 @@ export interface TodosContextValue {
   moveTodo: (id: string, targetIndex: number) => void
   restoreTodo: (todo: TodoItem) => void
   deleteTodo: (id: string) => TodoItem | null
+  /** 一键清空归档，返回被清掉的条目，便于撤销。 */
+  clearArchived: () => TodoItem[]
+  /** 撤销清空：把条目按原样（仍是已完成）放回归档。 */
+  restoreArchived: (todos: TodoItem[]) => void
 }
 
 const TodosContext = createContext<TodosContextValue | null>(null)
@@ -42,7 +46,7 @@ export function TodosProvider({ children }: { children: ReactNode }) {
     setSaveIssue(saveTodos(todos) ? null : '本地存储不可用，待办改动不会保存。')
   }, [todos, hydrated])
 
-  // 归档满 7 天后自动删除；页面长期开着也不会一直留着过期条目。
+  // 归档满 30 天后自动删除；页面长期开着也不会一直留着过期条目。
   useEffect(() => {
     const sweep = () => {
       setTodos(previous => {
@@ -138,6 +142,21 @@ export function TodosProvider({ children }: { children: ReactNode }) {
     [todos],
   )
 
+  const clearArchived = useCallback(() => {
+    const removed = todos.filter(todo => todo.done)
+    if (removed.length > 0) setTodos(previous => previous.filter(todo => !todo.done))
+    return removed
+  }, [todos])
+
+  const restoreArchived = useCallback((items: TodoItem[]) => {
+    if (items.length === 0) return
+    setTodos(previous => {
+      const existing = new Set(previous.map(todo => todo.id))
+      const revived = items.filter(item => !existing.has(item.id))
+      return revived.length > 0 ? [...revived, ...previous] : previous
+    })
+  }, [])
+
   const value = useMemo<TodosContextValue>(
     () => ({
       todos,
@@ -149,6 +168,8 @@ export function TodosProvider({ children }: { children: ReactNode }) {
       moveTodo,
       restoreTodo,
       deleteTodo,
+      clearArchived,
+      restoreArchived,
     }),
     [
       todos,
@@ -160,6 +181,8 @@ export function TodosProvider({ children }: { children: ReactNode }) {
       moveTodo,
       restoreTodo,
       deleteTodo,
+      clearArchived,
+      restoreArchived,
     ],
   )
 
