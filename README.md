@@ -24,36 +24,49 @@
 
 ## 启动方式
 
-先 `npm install`，然后按目的选一条：
+需要 Node `^20.19.0 || >=22.12.0`（Vite 8 的要求）。第一次用先装依赖：
+
+```bash
+npm install
+```
+
+**日常使用最省事**：双击项目根目录的 `start-app.cmd`。它会自动构建并启动本地服务，窗口里出现地址后打开 **http://127.0.0.1:5173/** 即可。关掉那个命令行窗口就是停止服务（数据不会丢）。
+
+也可以在终端里按目的选一条：
 
 | 你想做什么 | 命令 | 打开的地址 | 数据会不会写文件 |
 | --- | --- | --- | --- |
-| **日常使用（推荐）** | `npm run app` | http://127.0.0.1:5173 | 会：`data/` 里有 JSON 快照和日志 |
-| 改前端代码，要热更新 | `npm run dev` | http://127.0.0.1:5173 | 不会，除非另开终端跑 `npm run store` |
+| **日常使用（推荐）** | `npm run app` 或双击 `start-app.cmd` | http://127.0.0.1:5173 | 会：`data/` 里有 JSON 快照和日志 |
+| 改前端代码，要热更新 | `npm run dev` | http://127.0.0.1:5173 | 不会；想同时写文件，另开一个终端跑 `npm run store` |
 | 只检查构建出来的静态页面 | `npm run build` + `npm run preview` | http://localhost:4173 | 不会，只有浏览器存储 |
 | 跑测试 / 类型检查 | `npm test`、`npm run typecheck` | — | — |
 | 重做 PWA 图标 | `npm run icons` | — | — |
 
-直接上手就是：
+> `npm run dev` 和 `npm run app` 都用 5173，不要同时开。
 
-```bash
-npm install
-npm run app
-```
+### 启动之后
 
-然后打开 **http://127.0.0.1:5173/** 。
+- **终端窗口别关**：服务就是这个 node 进程，关窗口或 Ctrl+C 就停了；页面会显示「未连接」，但数据都在（`data/` + 浏览器缓存）。重新跑一次 `npm run app` 就从原处继续。
+- **地址固定用 `http://127.0.0.1:5173`**，不要和 `http://localhost:5173` 混着开：浏览器把它们当两个站点，各自有一份 `localStorage`。
+- **改了代码要重新启动**（`npm run app` 会先 build）；只刷新页面看不到新代码。开发时用 `npm run dev` 更省事。
+- 设置页「本地文件同步」显示 **已连接**，才代表改动会落盘；显示未连接时改动只在浏览器里，把服务跑起来后**刷新一次页面**会补写进文件。
+- 服务中途重启过（关掉再开）也一样：刷新一次页面再继续，没有自动重连。
+- 端口被占用时换个端口：`node scripts/local-store.mjs --port 5180`，地址相应变成 http://127.0.0.1:5180/ 。
+- 页面开着才会弹提醒；关掉页面要靠 `.ics` 导入手机日历。想开机自启，把 `start-app.cmd` 的快捷方式放进「启动」文件夹（Win+R → `shell:startup`）。
+- 装成 PWA 后离线也能打开，但离线看到的是缓存里的旧页面，连「已连接」状态也可能是旧的；联网后刷新一次即可。
+- 备份/迁移就复制整个 `data/` 目录（`recruitment-timeline.json` + `.bak.json` + `changes.log`），只拿 `changes.log` 是恢复不了的。
 
 ### 这几条命令到底差在哪
 
 - `npm run app` = `npm run build` + `node scripts/local-store.mjs`。这个本地服务同时做两件事：把 `dist/` 当静态站点托管，并提供 `/api/state` 读写接口。所以**页面和写入接口是同一个来源（5173）**，数据能直接落到 `data/`。日常用这一条。
-- `npm run dev` 只是 Vite 开发服务器（热更新），没有写入接口；此时设置页会显示「未连接」，数据只进浏览器。如果想让 dev 也写文件，另开一个终端跑 `npm run store`（监听 4600，dev 会把 `/api` 代理过去）。
+- `npm run dev` 只是 Vite 开发服务器（热更新），没有写入接口；此时设置页会显示「未连接」，数据只进浏览器。如果想让 dev 也写文件，另开一个终端跑 `npm run store`（固定 4600，dev 会把 `/api` 代理过去）。
 - `npm run preview` 只托管构建产物，同样没有 `/api`，适合临时看一眼生产构建长什么样。
-- `npm run store` 单独跑本地文件服务；一般不直接用，只在配合 `npm run dev` 时用。
+- `npm run store` 单独跑本地文件服务，固定监听 4600（只给 `npm run dev` 配合用，不单独开页面）。
 
-> 端口 / 数据目录可以改：`RT_PORT`（默认 5173）、`RT_DATA_DIR`（默认 `./data`）。
-> 例：`RT_PORT=5180 RT_DATA_DIR=D:\秋招\data npm run app`。
+> 端口 / 数据目录可以改：命令行参数 `--port`、`--data-dir`，或环境变量 `RT_PORT`（默认 5173）、`RT_DATA_DIR`（默认 `./data`）。
+> 例：`node scripts/local-store.mjs --port 5180 --data-dir D:\秋招\data`；Windows PowerShell 也可以 `$env:RT_PORT=5180; npm run app`。
 
-**重启电脑后**：数据不会丢（`data/` 文件和浏览器缓存都在），但本地服务不会自己启动。重新打开终端进项目目录，跑一次 `npm run app`，再打开 http://127.0.0.1:5173/ 即可。想开机自启的话，可以把这条命令做成快捷方式放进「启动」文件夹（Win+R → `shell:startup`）。
+**重启电脑后**：数据不会丢（`data/` 文件和浏览器缓存都在），但本地服务不会自己启动。重新双击 `start-app.cmd`（或跑 `npm run app`），再打开 http://127.0.0.1:5173/ 即可。
 
 ## 数据存在哪
 
@@ -68,7 +81,7 @@ npm run app
 
 - 页面启动先读文件；**文件比浏览器新，就把文件内容灌回浏览器再渲染**，所以换浏览器、清浏览器缓存都能从文件恢复。
 - 每次新增 / 修改 / 删除 / 拖动排序后 400ms 合并一次写盘，并在日志里追加一条（含实体、动作、id、标题、变化字段）。
-- 服务没开时照常写浏览器，下次连上会自动补写文件。
+- 服务没开时照常写浏览器；服务起来后刷新一次页面，会把浏览器里比文件新的改动补写进文件。
 - 设置页有「立即写入文件」和「用文件覆盖浏览器」两个手动按钮。
 - **覆盖前自动备份**：浏览器侧会先存一份 `rt.v1.backup.<时间>`（最多保留 3 份）；文件侧每次写入前把上一版复制成 `data/recruitment-timeline.bak.json`。万一被错误覆盖，可以从这两处找回。
 - **旧数据自动迁移**：旧阶段「HR 面」并入「面试」；旧状态「已通过」→「流程中」，「未通过 / 已放弃」→「已结束」。迁移在读取时完成，不会丢记录。
@@ -139,7 +152,7 @@ npm run app
 - 录入的是本地墙钟时间，导出时换算成 UTC（`...Z`），手机日历按你的时区正常显示。
 - 定时事件用相对触发 `TRIGGER:-PT30M`；全天事件用绝对触发，固定在当天 09:00 前提醒。
 - 严格遵守 RFC 5545：CRLF 换行、75 字节折行（不会把中文劈开）、转义 `\ ; , 换行`。
-- 导出范围可选「仅待进行」或「全部事件」；全部事件页也能直接导出当前筛选结果。
+- 导出范围可选「未结束」（待进行 + 流程中）或「全部事件」；全部事件页也能直接导出当前筛选结果。
 
 ## 部署与手机
 
@@ -151,17 +164,19 @@ npm run app
 ## 目录结构
 
 ```
+start-app.cmd            Windows 双击启动（内部就是 npm run app）
 scripts/local-store.mjs  本地文件服务：静态托管 + /api/state（JSON 快照 + JSONL 日志）
 scripts/gen-icons.mjs    纯 Node 生成 PWA 图标（无额外依赖）
 src/
   types.ts               数据模型与常量（阶段、状态、提醒选项）
-  lib/                   date（倒计时/月历/分组）、ics、notify、conflict、colors、todos、sync、download
-  store/                 storage（校验/迁移/损坏兜底）、useEvents、useTodos、useSettings、importExport
+  lib/                   date（倒计时/月历/分组）、ics、notify、conflict、colors、todos、sync、clipboard、download
+  store/                 storage（校验/迁移/损坏兜底）、useEvents、useTodos、useSettings、useCompanyColors、importExport
   hooks/                 useNow、useHashRoute、useNotifications、useFileSync
   components/            布局、卡片、倒计时、月历、表单、筛选、Toast、确认框
   views/                 总览 / 日历 / 全部事件 / TO DO / 设置
   test/                  单元与集成测试
 public/                  manifest、sw.js、生成的图标
+docs/screenshots/        README 截图放这里
 ```
 
 ## 测试
@@ -174,7 +189,7 @@ npm test   # 104 个用例
 
 ## 截图（占位，自己配）
 
-建议把图片放进 `docs/screenshots/`，然后把下面注释里的文件名放进真正的 `![说明](路径)` 里：
+`docs/screenshots/` 已经建好（带 `.gitkeep`），把图片放进去，然后把下面注释里的文件名放进真正的 `![说明](路径)` 里：
 
 ```md
 <!-- 01 总览（深色，1440×1000）：docs/screenshots/01-overview.png -->

@@ -90,7 +90,10 @@ export function useFileSync(
       if (!remote.data) {
         // 文件为空但浏览器里已有数据：把现有内容带进文件，完成迁移。
         if (hasAnyData(currentRef.current)) void push(true)
+        return
       }
+      // 服务关着时改过的内容只在浏览器里，连上后补写一次（diff 为空则不会写盘）。
+      if (hasAnyData(currentRef.current)) void push()
     })()
     return () => {
       cancelled = true

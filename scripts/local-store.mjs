@@ -14,11 +14,19 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const DIST_DIR = join(ROOT, 'dist')
-const DATA_DIR = resolve(process.env.RT_DATA_DIR || join(ROOT, 'data'))
+
+// 命令行参数优先于环境变量，方便 `npm run store` 固定用 4600 配合 dev。
+function argValue(name) {
+  const args = process.argv.slice(2)
+  const index = args.indexOf(name)
+  return index >= 0 ? args[index + 1] : undefined
+}
+
+const DATA_DIR = resolve(argValue('--data-dir') || process.env.RT_DATA_DIR || join(ROOT, 'data'))
 const STATE_PATH = join(DATA_DIR, 'recruitment-timeline.json')
 const BACKUP_PATH = join(DATA_DIR, 'recruitment-timeline.bak.json')
 const LOG_PATH = join(DATA_DIR, 'changes.log')
-const PORT = Number(process.env.RT_PORT || 5173)
+const PORT = Number(argValue('--port') || process.env.RT_PORT || 5173)
 const HOST = process.env.RT_HOST || '127.0.0.1'
 const MAX_BODY_BYTES = 8 * 1024 * 1024
 

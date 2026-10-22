@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "preview": "vite preview",
     "app": "npm run build && node scripts/local-store.mjs",
-    "store": "node scripts/local-store.mjs",
+    "store": "node scripts/local-store.mjs --port 4600",
     "icons": "node scripts/gen-icons.mjs"
   },
   "dependencies": {
