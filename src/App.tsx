@@ -36,6 +36,7 @@ function toInput(event: RecruitEvent): EventInput {
     durationMin: event.durationMin,
     mode: event.mode,
     link: event.link,
+    passcode: event.passcode,
     location: event.location,
     note: event.note,
     remindBeforeMin: event.remindBeforeMin,

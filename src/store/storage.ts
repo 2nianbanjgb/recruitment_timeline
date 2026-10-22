@@ -99,6 +99,7 @@ export function normalizeEvent(raw: unknown): RecruitEvent | null {
     durationMin: Math.min(600, Math.max(5, Math.round(num(source.durationMin, 60)))),
     mode: pick<Mode>(source.mode, MODES, link ? 'online' : 'onsite'),
     link,
+    passcode: str(source.passcode),
     location: str(source.location),
     note: str(source.note),
     remindBeforeMin: clampRemind(num(source.remindBeforeMin, DEFAULT_SETTINGS.defaultRemindMin)),

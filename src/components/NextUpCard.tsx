@@ -4,7 +4,8 @@ import { companyColor } from '../lib/colors'
 import { formatFullRange } from '../lib/date'
 import { btnPrimary, btnSecondary } from './ui'
 import { Countdown } from './Countdown'
-import { IconClock, IconEdit, IconExternal, IconMapPin, IconPlus, IconVideo } from './icons'
+import { CopyButton } from './CopyButton'
+import { IconClock, IconEdit, IconExternal, IconKey, IconMapPin, IconPlus, IconVideo } from './icons'
 
 export interface NextUpCardProps {
   event: RecruitEvent | null
@@ -78,16 +79,44 @@ export function NextUpCard({
             <span className="inline-flex items-center gap-1.5">
               {event.mode === 'online' ? <IconVideo className="h-4 w-4" /> : <IconMapPin className="h-4 w-4" />}
               {MODE_LABELS[event.mode]}
-              {event.mode === 'onsite' && event.location ? ` · ${event.location}` : ''}
             </span>
-            {event.mode === 'online' && event.link ? (
+
+            {event.mode === 'onsite' && event.location ? (
+              <span className="inline-flex min-w-0 items-center gap-1.5">
+                <span className="max-w-[20rem] truncate" title={event.location}>
+                  {event.location}
+                </span>
+                <CopyButton
+                  value={event.location}
+                  label={`复制地址「${event.location}」`}
+                  successMessage="已复制地址"
+                />
+              </span>
+            ) : null}
+
+            {event.mode === 'online' && event.passcode ? (
+              <span className="inline-flex items-center gap-1.5">
+                <IconKey className="h-4 w-4" />
+                作答口令
+                <span className="rounded bg-panel-soft px-1.5 py-0.5 font-mono text-sm text-ink">
+                  {event.passcode}
+                </span>
+                <CopyButton
+                  value={event.passcode}
+                  label={`复制口令「${event.passcode}」`}
+                  successMessage="已复制作答口令"
+                />
+              </span>
+            ) : null}
+
+            {event.link ? (
               <a
                 href={event.link}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-accent hover:underline"
               >
-                会议链接
+                {event.mode === 'online' ? '会议链接' : '通知链接'}
                 <IconExternal className="h-3.5 w-3.5" />
               </a>
             ) : null}

@@ -59,4 +59,39 @@ describe('EventForm', () => {
 
     expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ allDay: true, startAt: '2026-10-24' })
   })
+
+  it('线上会议可以填会议链接和作答口令', async () => {
+    const onSubmit = vi.fn()
+    const user = userEvent.setup()
+    renderForm(onSubmit)
+
+    await user.type(screen.getByPlaceholderText('例如：字节跳动'), '字节跳动')
+    await user.type(screen.getByPlaceholderText('https://...'), 'https://meeting.example.com/abc')
+    await user.type(screen.getByPlaceholderText('例如：8848'), '8848')
+    await user.click(screen.getByRole('button', { name: '添加' }))
+
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
+      mode: 'online',
+      link: 'https://meeting.example.com/abc',
+      passcode: '8848',
+    })
+  })
+
+  it('线下场次可以填地址和通知链接', async () => {
+    const onSubmit = vi.fn()
+    const user = userEvent.setup()
+    renderForm(onSubmit)
+
+    await user.type(screen.getByPlaceholderText('例如：字节跳动'), '美团')
+    await user.click(screen.getByRole('button', { name: '线下' }))
+    await user.type(screen.getByPlaceholderText('例如：上海张江 · 3 号楼'), '北京望京 · 美团总部')
+    await user.type(screen.getByPlaceholderText('https://...'), 'https://notice.example.com/1')
+    await user.click(screen.getByRole('button', { name: '添加' }))
+
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
+      mode: 'onsite',
+      location: '北京望京 · 美团总部',
+      link: 'https://notice.example.com/1',
+    })
+  })
 })

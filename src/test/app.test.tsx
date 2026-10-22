@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
 import { ToastProvider } from '../components/Toast'
 import { EventsProvider } from '../store/useEvents'
@@ -81,6 +81,60 @@ describe('App 集成', () => {
 
     await user.click(screen.getByRole('button', { name: '删除' }))
     expect(screen.queryByRole('button', { name: '删除「字节跳动」' })).toBeNull()
+    window.location.hash = ''
+  })
+
+  it('线上一键复制口令、线下一键复制地址并带通知链接', async () => {
+    const soon = Date.now() + 86_400_000
+    window.localStorage.setItem(
+      EVENTS_KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        events: [
+          makeEvent({
+            id: 'ev-online',
+            company: '字节跳动',
+            startAt: localInput(soon),
+            passcode: '8848',
+            link: 'https://meeting.example.com/abc',
+          }),
+          makeEvent({
+            id: 'ev-onsite',
+            company: '美团',
+            mode: 'onsite',
+            location: '北京望京 · 美团总部',
+            link: 'https://notice.example.com/1',
+            startAt: localInput(soon + 3_600_000),
+          }),
+        ],
+      }),
+    )
+    window.location.hash = '#/events'
+    const user = userEvent.setup()
+    // userEvent.setup() 会先装一份自己的剪贴板桩，这里在它之后替换成能断言的版本。
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+
+    renderApp()
+
+    expect(screen.getByText('8848')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '复制口令「8848」' }))
+    expect(writeText).toHaveBeenCalledWith('8848')
+    expect(await screen.findByText('已复制作答口令')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '复制地址「北京望京 · 美团总部」' }))
+    expect(writeText).toHaveBeenCalledWith('北京望京 · 美团总部')
+    expect(await screen.findByText('已复制地址')).toBeInTheDocument()
+
+    expect(screen.getByRole('link', { name: '通知链接' })).toHaveAttribute(
+      'href',
+      'https://notice.example.com/1',
+    )
+    expect(screen.getByRole('link', { name: '会议链接' })).toHaveAttribute(
+      'href',
+      'https://meeting.example.com/abc',
+    )
     window.location.hash = ''
   })
 })

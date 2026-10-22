@@ -50,6 +50,7 @@ const EVENT_FIELDS: (keyof RecruitEvent)[] = [
   'durationMin',
   'mode',
   'link',
+  'passcode',
   'location',
   'note',
   'remindBeforeMin',

@@ -231,6 +231,24 @@ export function IconExternal({ className }: IconProps) {
   )
 }
 
+export function IconCopy({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <rect x="9" y="9" width="12" height="12" rx="2.5" />
+      <path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H5.5A2.5 2.5 0 0 0 3 5.5v7A2.5 2.5 0 0 0 5.5 15" />
+    </Svg>
+  )
+}
+
+export function IconKey({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <circle cx="8" cy="15" r="4" />
+      <path d="m10.8 12.2 8.2-8.2M16 6l2.5 2.5M13.5 8.5 16 11" />
+    </Svg>
+  )
+}
+
 export function IconSparkle({ className }: IconProps) {
   return (
     <Svg className={className}>

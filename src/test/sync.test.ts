@@ -22,6 +22,7 @@ function makeEvent(overrides: Partial<RecruitEvent> = {}): RecruitEvent {
     durationMin: 60,
     mode: 'online',
     link: '',
+    passcode: '',
     location: '',
     note: '',
     remindBeforeMin: 30,

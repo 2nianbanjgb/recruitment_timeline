@@ -43,6 +43,7 @@ export function EventForm({
   const [durationMin, setDurationMin] = useState(60)
   const [mode, setMode] = useState<Mode>('online')
   const [link, setLink] = useState('')
+  const [passcode, setPasscode] = useState('')
   const [location, setLocation] = useState('')
   const [note, setNote] = useState('')
   const [remindBeforeMin, setRemindBeforeMin] = useState(defaultRemindMin)
@@ -74,6 +75,7 @@ export function EventForm({
       setDurationMin(initial.durationMin)
       setMode(initial.mode)
       setLink(initial.link)
+      setPasscode(initial.passcode)
       setLocation(initial.location)
       setNote(initial.note)
       setRemindBeforeMin(initial.remindBeforeMin)
@@ -89,6 +91,7 @@ export function EventForm({
     setDurationMin(60)
     setMode('online')
     setLink('')
+    setPasscode('')
     setLocation('')
     setNote('')
     setRemindBeforeMin(defaultRemindMin)
@@ -120,6 +123,7 @@ export function EventForm({
       durationMin: Math.min(600, Math.max(5, durationMin || 60)),
       mode,
       link: link.trim(),
+      passcode: passcode.trim(),
       location: location.trim(),
       note: note.trim(),
       remindBeforeMin,
@@ -277,27 +281,64 @@ export function EventForm({
           </div>
 
           {mode === 'online' ? (
-            <label className="flex flex-col gap-1.5">
-              <span className={labelClass}>会议链接</span>
-              <input
-                type="url"
-                value={link}
-                onChange={event => setLink(event.target.value)}
-                placeholder="https://..."
-                className={fieldClass}
-              />
-            </label>
+            <div className="flex flex-col gap-3">
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>会议链接</span>
+                <input
+                  type="url"
+                  value={link}
+                  onChange={event => setLink(event.target.value)}
+                  placeholder="https://..."
+                  className={fieldClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>
+                  作答口令
+                  <span className="ml-1.5 text-[11px] font-normal text-ink-faint">
+                    会议密码 / 入会口令，没有可以留空
+                  </span>
+                </span>
+                <input
+                  type="text"
+                  value={passcode}
+                  onChange={event => setPasscode(event.target.value)}
+                  placeholder="例如：8848"
+                  className={`${fieldClass} max-w-[16rem] font-mono`}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                />
+              </label>
+            </div>
           ) : (
-            <label className="flex flex-col gap-1.5">
-              <span className={labelClass}>地址</span>
-              <input
-                type="text"
-                value={location}
-                onChange={event => setLocation(event.target.value)}
-                placeholder="例如：上海张江 · 3 号楼"
-                className={fieldClass}
-              />
-            </label>
+            <div className="flex flex-col gap-3">
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>地址</span>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={event => setLocation(event.target.value)}
+                  placeholder="例如：上海张江 · 3 号楼"
+                  className={fieldClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>
+                  通知链接
+                  <span className="ml-1.5 text-[11px] font-normal text-ink-faint">
+                    邮件或官网的通知原文，方便回看
+                  </span>
+                </span>
+                <input
+                  type="url"
+                  value={link}
+                  onChange={event => setLink(event.target.value)}
+                  placeholder="https://..."
+                  className={fieldClass}
+                />
+              </label>
+            </div>
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">

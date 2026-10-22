@@ -10,11 +10,14 @@ import {
   isOverdue,
 } from '../lib/date'
 import { btnDangerIcon, btnIcon } from './ui'
+import { CopyButton } from './CopyButton'
 import { Menu } from './Menu'
 import {
   IconAlert,
   IconChevronDown,
   IconEdit,
+  IconExternal,
+  IconKey,
   IconMapPin,
   IconTrash,
   IconVideo,
@@ -104,25 +107,52 @@ export function EventCard({
           </p>
 
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-faint">
-            <span className="inline-flex min-w-0 items-center gap-1">
+            <span className="inline-flex items-center gap-1">
               {event.mode === 'online' ? (
                 <IconVideo className="h-3.5 w-3.5" />
               ) : (
                 <IconMapPin className="h-3.5 w-3.5" />
               )}
-              <span className="truncate">
-                {MODE_LABELS[event.mode]}
-                {event.mode === 'onsite' && event.location ? ` · ${event.location}` : ''}
-              </span>
+              {MODE_LABELS[event.mode]}
             </span>
-            {event.mode === 'online' && event.link ? (
+
+            {event.mode === 'onsite' && event.location ? (
+              <span className="inline-flex min-w-0 items-center gap-1">
+                <span className="max-w-[15rem] truncate" title={event.location}>
+                  {event.location}
+                </span>
+                <CopyButton
+                  value={event.location}
+                  label={`复制地址「${event.location}」`}
+                  successMessage="已复制地址"
+                />
+              </span>
+            ) : null}
+
+            {event.mode === 'online' && event.passcode ? (
+              <span className="inline-flex items-center gap-1">
+                <IconKey className="h-3.5 w-3.5" />
+                口令
+                <span className="rounded bg-panel-soft px-1.5 py-0.5 font-mono text-ink">
+                  {event.passcode}
+                </span>
+                <CopyButton
+                  value={event.passcode}
+                  label={`复制口令「${event.passcode}」`}
+                  successMessage="已复制作答口令"
+                />
+              </span>
+            ) : null}
+
+            {event.link ? (
               <a
                 href={event.link}
                 target="_blank"
                 rel="noreferrer"
-                className="text-accent hover:underline"
+                className="inline-flex items-center gap-1 text-accent hover:underline"
               >
-                会议链接
+                {event.mode === 'online' ? '会议链接' : '通知链接'}
+                <IconExternal className="h-3 w-3" />
               </a>
             ) : null}
           </div>
