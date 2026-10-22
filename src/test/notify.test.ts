@@ -46,8 +46,8 @@ describe('到点筛选', () => {
     expect(dueNotifications([event], start + NOTIFICATION_GRACE_MS + MINUTE, {})).toHaveLength(0)
   })
 
-  it('只处理待进行的场次', () => {
-    const event = makeEvent({ startAt: '2026-10-24T14:00', status: 'passed' })
+  it('只处理未结束的场次', () => {
+    const event = makeEvent({ startAt: '2026-10-24T14:00', status: 'finished' })
     const triggerAt = notificationTrigger(event, 'remind')!
     expect(dueNotifications([event], triggerAt, {})).toHaveLength(0)
   })

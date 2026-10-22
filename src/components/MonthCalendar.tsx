@@ -1,5 +1,5 @@
 import type { RecruitEvent } from '../types'
-import { STATUS_STYLES } from '../lib/colors'
+import { companyColor } from '../lib/colors'
 import { dayKey, eventStart, formatMonthTitle, monthMatrix } from '../lib/date'
 import { btnIcon, btnSecondary } from './ui'
 import { IconChevronLeft, IconChevronRight } from './icons'
@@ -96,12 +96,14 @@ export function MonthCalendar({
                   {isToday ? <span className="text-[10px] text-accent">今天</span> : null}
                 </span>
 
-                {/* 桌面端：公司小条 */}
+                {/* 桌面端：公司小条，顶部边框用公司色区分 */}
                 <span className="hidden flex-col gap-0.5 sm:flex">
                   {dayEvents.slice(0, 3).map(event => (
                     <span
                       key={event.id}
-                      className={`truncate rounded px-1.5 py-[3px] text-[11px] leading-tight ${STATUS_STYLES[event.status].pill}`}
+                      className="truncate rounded border-t-2 bg-panel-soft px-1.5 py-[3px] text-[11px] leading-tight text-ink-muted"
+                      style={{ borderTopColor: companyColor(event.company).accent }}
+                      title={event.company}
                     >
                       {event.company}
                     </span>
@@ -111,12 +113,13 @@ export function MonthCalendar({
                   ) : null}
                 </span>
 
-                {/* 移动端：圆点 */}
+                {/* 移动端：圆点，同样按公司色 */}
                 <span className="mt-auto flex flex-wrap gap-1 sm:hidden">
                   {dayEvents.slice(0, 4).map(event => (
                     <span
                       key={event.id}
-                      className={`h-1.5 w-1.5 rounded-full ${STATUS_STYLES[event.status].dot}`}
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: companyColor(event.company).accent }}
                     />
                   ))}
                 </span>

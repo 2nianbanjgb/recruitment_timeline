@@ -212,7 +212,7 @@ export function upcomingWeekRange(now: number): { start: number; end: number } {
 }
 
 export function isOverdue(event: RecruitEvent, now: number): boolean {
-  if (event.status !== 'pending') return false
+  if (event.status === 'finished') return false
   if (event.allDay) return diffCalendarDays(new Date(now), eventStart(event)) < 0
   return now >= eventEnd(event).getTime()
 }
@@ -226,7 +226,9 @@ export function sortByStart(events: readonly RecruitEvent[]): RecruitEvent[] {
 }
 
 export function nextEvent(events: readonly RecruitEvent[], now: number): RecruitEvent | null {
-  const candidates = events.filter(event => event.status === 'pending' && eventEnd(event).getTime() > now)
+  const candidates = events.filter(
+    event => event.status !== 'finished' && eventEnd(event).getTime() > now,
+  )
   return sortByStart(candidates)[0] ?? null
 }
 

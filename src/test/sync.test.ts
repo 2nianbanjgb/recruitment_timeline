@@ -67,7 +67,7 @@ describe('文件同步的变更记录', () => {
       events: [makeEvent({ id: 'a' }), makeEvent({ id: 'b', company: '腾讯' })],
     })
     const next = snapshot({
-      events: [makeEvent({ id: 'a', status: 'passed' }), makeEvent({ id: 'c', company: '美团' })],
+      events: [makeEvent({ id: 'a', status: 'in_progress' }), makeEvent({ id: 'c', company: '美团' })],
     })
 
     const changes = diffState(base, next)

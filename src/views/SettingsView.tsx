@@ -84,7 +84,7 @@ export function SettingsView({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pendingImport, setPendingImport] = useState<ParsedBackup | null>(null)
   const [confirmClear, setConfirmClear] = useState(false)
-  const [icsScope, setIcsScope] = useState<'pending' | 'all'>('pending')
+  const [icsScope, setIcsScope] = useState<'active' | 'all'>('active')
 
   const permissionLabel =
     permission === 'granted'
@@ -125,7 +125,7 @@ export function SettingsView({
 
   const exportIcs = () => {
     const list =
-      icsScope === 'pending' ? events.filter(event => event.status === 'pending') : [...events]
+      icsScope === 'active' ? events.filter(event => event.status !== 'finished') : [...events]
     if (list.length === 0) {
       toast('没有可导出的事件')
       return
@@ -335,10 +335,10 @@ export function SettingsView({
             <span className="text-xs font-medium text-ink-muted">导出 .ics 的范围</span>
             <select
               value={icsScope}
-              onChange={event => setIcsScope(event.target.value === 'all' ? 'all' : 'pending')}
+              onChange={event => setIcsScope(event.target.value === 'all' ? 'all' : 'active')}
               className={`${fieldClass} w-44`}
             >
-              <option value="pending">仅待进行</option>
+              <option value="active">未结束</option>
               <option value="all">全部事件</option>
             </select>
           </label>

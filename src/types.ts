@@ -1,5 +1,5 @@
 export type Stage = 'apply' | 'assessment' | 'written' | 'interview' | 'offer' | 'other'
-export type Status = 'pending' | 'passed' | 'failed' | 'withdrawn'
+export type Status = 'pending' | 'in_progress' | 'finished'
 export type Mode = 'online' | 'onsite'
 export type Theme = 'system' | 'light' | 'dark'
 
@@ -57,7 +57,7 @@ export interface BackupFile {
 export const SCHEMA_VERSION = 1
 
 export const STAGES: readonly Stage[] = ['apply', 'assessment', 'written', 'interview', 'offer', 'other']
-export const STATUSES: readonly Status[] = ['pending', 'passed', 'failed', 'withdrawn']
+export const STATUSES: readonly Status[] = ['pending', 'in_progress', 'finished']
 export const MODES: readonly Mode[] = ['online', 'onsite']
 export const THEMES: readonly Theme[] = ['system', 'light', 'dark']
 
@@ -72,9 +72,8 @@ export const STAGE_LABELS: Record<Stage, string> = {
 
 export const STATUS_LABELS: Record<Status, string> = {
   pending: '待进行',
-  passed: '已通过',
-  failed: '未通过',
-  withdrawn: '已放弃',
+  in_progress: '流程中',
+  finished: '已结束',
 }
 
 export const MODE_LABELS: Record<Mode, string> = {

@@ -46,7 +46,7 @@ export function EventCard({
 
   return (
     <article
-      className={`group relative overflow-hidden rounded-2xl border bg-panel p-3.5 transition hover:shadow-[var(--shadow-soft)] sm:p-4 ${
+      className={`group relative rounded-2xl border bg-panel p-3.5 transition hover:shadow-[var(--shadow-soft)] sm:p-4 ${
         highlight ? 'border-accent ring-2 ring-accent/25' : 'border-line hover:border-line-strong'
       } ${overdue ? 'opacity-80' : ''}`}
     >

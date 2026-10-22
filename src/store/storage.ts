@@ -57,6 +57,19 @@ function normalizeStage(value: unknown): Stage {
   return pick<Stage>(value, STAGES, 'other')
 }
 
+/** 旧的状态是结果制（已通过/未通过/已放弃），现在改成流程制。 */
+const LEGACY_STATUS: Record<string, Status> = {
+  passed: 'in_progress',
+  failed: 'finished',
+  withdrawn: 'finished',
+}
+
+function normalizeStatus(value: unknown): Status {
+  const raw = str(value)
+  if ((STATUSES as readonly string[]).includes(raw)) return raw as Status
+  return LEGACY_STATUS[raw] ?? 'pending'
+}
+
 /** 尽最大努力把一条任意输入修成合法事件；无法识别时返回 null。 */
 export function normalizeEvent(raw: unknown): RecruitEvent | null {
   if (!raw || typeof raw !== 'object') return null
@@ -80,7 +93,7 @@ export function normalizeEvent(raw: unknown): RecruitEvent | null {
     company,
     role: str(source.role),
     stage: normalizeStage(source.stage),
-    status: pick<Status>(source.status, STATUSES, 'pending'),
+    status: normalizeStatus(source.status),
     allDay,
     startAt,
     durationMin: Math.min(600, Math.max(5, Math.round(num(source.durationMin, 60)))),

@@ -7,7 +7,7 @@ import { eventEnd, eventStart } from './date'
  */
 export function conflictIds(events: readonly RecruitEvent[]): Set<string> {
   const intervals = events
-    .filter(event => event.status === 'pending' && !event.allDay)
+    .filter(event => event.status !== 'finished' && !event.allDay)
     .map(event => ({
       id: event.id,
       start: eventStart(event).getTime(),

@@ -31,12 +31,12 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
   const nowDate = new Date(now)
   const nextUp = nextEvent(events, now)
 
-  const upcoming = events.filter(event => event.status === 'pending' && eventEnd(event).getTime() > now)
-  const writtenCount = upcoming.filter(
-    event => event.stage === 'written' || event.stage === 'assessment',
-  ).length
-  const interviewCount = upcoming.filter(event => event.stage === 'interview').length
-  const finishedCount = events.filter(event => event.status !== 'pending').length
+  const upcoming = events.filter(
+    event => event.status !== 'finished' && eventEnd(event).getTime() > now,
+  )
+  const pendingCount = upcoming.filter(event => event.status === 'pending').length
+  const inProgressCount = upcoming.filter(event => event.status === 'in_progress').length
+  const finishedCount = events.filter(event => event.status === 'finished').length
 
   const todayEvents = eventsOnDay(events, nowDate)
   // 「今天起 7 天」= 今天到下周同一星期（含），共 8 个自然日，看 lib/date.ts 里的实现。
@@ -77,10 +77,10 @@ export function DashboardView({ now, onAdd, onEdit, onNavigateAll }: DashboardVi
 
       <StatRow
         items={[
-          { label: '待测评/笔试', value: writtenCount, tone: 'accent' },
-          { label: '待面试', value: interviewCount, tone: 'warn' },
+          { label: '待进行', value: pendingCount, tone: 'accent' },
+          { label: '流程中', value: inProgressCount, tone: 'info' },
           { label: '近 7 天', value: weekEvents.length, tone: 'success' },
-          { label: '已出结果', value: finishedCount, tone: 'muted' },
+          { label: '已结束', value: finishedCount, tone: 'muted' },
         ]}
       />
 

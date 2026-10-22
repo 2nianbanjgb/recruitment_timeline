@@ -81,7 +81,7 @@ export function dueNotifications(
   const due: DueNotification[] = []
 
   for (const event of events) {
-    if (event.status !== 'pending') continue
+    if (event.status === 'finished') continue
     for (const kind of ['remind', 'start'] as const) {
       const triggerAt = notificationTrigger(event, kind)
       if (triggerAt === null) continue

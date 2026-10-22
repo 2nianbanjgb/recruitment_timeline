@@ -59,6 +59,14 @@ describe('事件归一化', () => {
     expect(event?.stage).toBe('interview')
   })
 
+  it('旧的「已通过/未通过/已放弃」并入新状态', () => {
+    const base = { company: '腾讯', startAt: '2026-10-24T14:00' }
+    expect(normalizeEvent({ ...base, status: 'passed' })?.status).toBe('in_progress')
+    expect(normalizeEvent({ ...base, status: 'failed' })?.status).toBe('finished')
+    expect(normalizeEvent({ ...base, status: 'withdrawn' })?.status).toBe('finished')
+    expect(normalizeEvent({ ...base, status: 'in_progress' })?.status).toBe('in_progress')
+  })
+
   it('新阶段「测评」可正常读写', () => {
     const event = normalizeEvent({ company: '腾讯', startAt: '2026-10-24T14:00', stage: 'assessment' })
     expect(event?.stage).toBe('assessment')

@@ -3,7 +3,7 @@ import { cardClass } from './ui'
 export interface StatItem {
   label: string
   value: number
-  tone?: 'accent' | 'warn' | 'success' | 'muted'
+  tone?: 'accent' | 'warn' | 'success' | 'muted' | 'info'
 }
 
 const TONE_TEXT = {
@@ -11,6 +11,7 @@ const TONE_TEXT = {
   warn: 'text-warn',
   success: 'text-success',
   muted: 'text-ink-muted',
+  info: 'text-info',
 } as const
 
 export function StatRow({ items }: { items: StatItem[] }) {
